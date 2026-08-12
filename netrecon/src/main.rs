@@ -6,7 +6,7 @@
 
 use std::env;
 use std::io::{Read, Write};
-use std::net::{IpAddr, SocketAddr, TcpStream};
+use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -90,7 +90,21 @@ struct Found {
 fn parse_cidr(s: &str) -> Result<Vec<IpAddr>, String> {
     let (ip_str, prefix_str) = match s.split_once('/') {
         Some(p) => p,
-        None => return Ok(vec![s.parse().map_err(|_| format!("invalid IP: {s}"))?]),
+        None => {
+            // Single host: try IP first, then hostname resolution.
+            if let Ok(ip) = s.parse::<IpAddr>() {
+                return Ok(vec![ip]);
+            }
+            let resolved: Vec<IpAddr> = (s, 0)
+                .to_socket_addrs()
+                .map_err(|_| format!("cannot resolve host: {s}"))?
+                .map(|sa| sa.ip())
+                .collect();
+            if resolved.is_empty() {
+                return Err(format!("cannot resolve host: {s}"));
+            }
+            return Ok(resolved);
+        }
     };
     let ip: IpAddr = ip_str.parse().map_err(|_| format!("invalid IP: {ip_str}"))?;
     let prefix: u8 = prefix_str
@@ -103,6 +117,11 @@ fn parse_cidr(s: &str) -> Result<Vec<IpAddr>, String> {
         IpAddr::V4(v4) => u32::from(v4),
         IpAddr::V6(_) => return Err("IPv6 CIDR not supported yet".into()),
     };
+    if prefix < 8 {
+        return Err(format!(
+            "refusing /{prefix}: scanning more than 16M hosts is impractical"
+        ));
+    }
     let host_bits = 32 - prefix;
     let count = 1u32 << host_bits;
     let mask = if prefix == 0 {

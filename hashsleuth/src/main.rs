@@ -7,6 +7,7 @@
 
 use std::env;
 use std::fs;
+use std::io::BufRead;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -112,51 +113,56 @@ fn hash_with(algo: &str, data: &[u8]) -> String {
 }
 
 fn dict_mode(target: &str, wordlist: &str, algo: &str) {
-    let lines: Vec<String> = match fs::read_to_string(wordlist) {
-        Ok(s) => s.lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect(),
+    let file = match fs::File::open(wordlist) {
+        Ok(f) => f,
         Err(e) => {
             eprintln!("error: cannot read wordlist: {e}");
             std::process::exit(1);
         }
     };
-    println!(
-        "[*] HashSleuth {VERSION} | dict attack | algo={algo} | words={}",
-        lines.len()
-    );
-    println!("[*] target: {target}");
+    let reader = std::io::BufReader::new(file);
     let start = Instant::now();
     let found = Arc::new(AtomicBool::new(false));
     let target_arc = target.to_string();
-    let lines_arc = Arc::new(lines);
 
     let workers = num_cpus::get().max(2).min(32);
     let mut handles = Vec::new();
-    for w in 0..workers {
-        let lines = lines_arc.clone();
+    let mut seen = 0usize;
+    for line in reader.lines() {
+        if found.load(Ordering::Relaxed) {
+            break;
+        }
+        let line = match line {
+            Ok(l) => l,
+            Err(_) => break,
+        };
+        let candidate = line.trim();
+        if candidate.is_empty() {
+            continue;
+        }
+        seen += 1;
         let found = found.clone();
         let target = target_arc.clone();
         let algo = algo.to_string();
+        let candidate = candidate.to_string();
         handles.push(thread::spawn(move || {
-            let mut i = w;
-            while i < lines.len() {
-                if found.load(Ordering::Relaxed) {
-                    break;
-                }
-                let candidate = &lines[i];
-                if hash_with(&algo, candidate.as_bytes()) == target {
-                    println!("[+] FOUND: {candidate}");
-                    found.store(true, Ordering::Relaxed);
-                    break;
-                }
-                i += workers;
+            if !found.load(Ordering::Relaxed)
+                && hash_with(&algo, candidate.as_bytes()) == target
+            {
+                println!("[+] FOUND: {candidate}");
+                found.store(true, Ordering::Relaxed);
             }
         }));
+        if handles.len() >= workers {
+            let h = handles.remove(0);
+            let _ = h.join();
+        }
     }
     for h in handles {
         let _ = h.join();
     }
     if !found.load(Ordering::Relaxed) {
-        println!("[-] not found in {} words ({:.2}s)", lines_arc.len(), start.elapsed().as_secs_f32());
+        println!("[-] not found in {seen} words ({:.2}s)", start.elapsed().as_secs_f32());
     } else {
         println!("[*] cracked in {:.2}s", start.elapsed().as_secs_f32());
     }
@@ -192,7 +198,13 @@ fn brute_mode(target: &str, charset: &str, max_len: usize, algo: &str) {
                     return;
                 }
                 let mut buf = vec![chars[0]; len];
-                let total: usize = chars.len().pow(len as u32);
+                let total: usize = match chars.len().checked_pow(len as u32) {
+                    Some(t) if t <= 100_000_000 => t,
+                    _ => {
+                        eprintln!("[-] search space too large (charset^{len}); aborting");
+                        return;
+                    }
+                };
                 let mut i = w;
                 while i < total {
                     if found.load(Ordering::Relaxed) {
