@@ -1,0 +1,9 @@
+[package]
+name = "packeteye"
+version = "1.0.0"
+edition = "2021"
+description = "Packet capture analyzer: live sniffing and offline pcap parsing with protocol stats"
+license = "MIT"
+
+[dependencies]
+pcap = "1"
