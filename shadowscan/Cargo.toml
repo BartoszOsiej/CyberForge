@@ -1,0 +1,10 @@
+[package]
+name = "shadowscan"
+version = "1.0.0"
+edition = "2021"
+description = "Web vulnerability scanner: headers audit, TLS checks, SQLi/XSS reflection probes, path discovery"
+license = "MIT"
+
+[dependencies]
+ureq = "2"
+openssl = "0.10"
