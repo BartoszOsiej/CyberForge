@@ -350,4 +350,27 @@ mod tests {
             "https://example.com/admin"
         );
     }
+
+    #[test]
+    fn normalize_target_keeps_ports_and_queries() {
+        assert_eq!(
+            normalize_target("example.com:8080/path?q=1&r=2"),
+            "http://example.com:8080/path?q=1&r=2"
+        );
+        assert_eq!(normalize_target("https://example.com:8443/"), "https://example.com:8443");
+    }
+
+    #[test]
+    fn normalize_target_trims_whitespace_and_slashes() {
+        assert_eq!(normalize_target("  example.com///  "), "http://example.com");
+        assert_eq!(normalize_target("http://example.com////"), "http://example.com");
+    }
+
+    #[test]
+    fn normalize_target_preserves_explicit_schemes() {
+        assert_eq!(normalize_target("https://secure.example"), "https://secure.example");
+        // Only lowercase schemes are recognised — uppercase is treated as a
+        // bare host and gets a scheme prepended.
+        assert_eq!(normalize_target("HTTP://upper.example"), "http://HTTP://upper.example");
+    }
 }

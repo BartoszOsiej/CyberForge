@@ -5,16 +5,16 @@
 
 ## Whole project
 
-**✅ 13 tests · 0 failed** across the 4 crates.
+**✅ 29 tests · 0 failed** across the 4 crates.
 
 ## Per-crate
 
 | Crate | Tests | Status |
 |---|---|---|
-| `hashsleuth` | 4 — hash identification, MD5/SHA1/SHA256 known-answer vectors | ✅ |
-| `netrecon` | 4 — service names, port range parsing, CIDR expansion, single-IP | ✅ |
-| `packeteye` | 3 — synthetic Ethernet/IPv4/TCP-SYN parse, garbage safety, ICMP counting | ✅ |
-| `shadowscan` | 2 — target URL normalization | ✅ |
+| `hashsleuth` | 8 — hash identification (hex lengths, crypt/Django/LDAP/phpass prefixes), known-answer vectors | ✅ |
+| `netrecon` | 8 — service names, ports/ranges, CIDR expansion + rejection, invalid forms | ✅ |
+| `packeteye` | 8 — TCP SYN/SYNACK/FIN, UDP ports, ICMP, ARP, IPv6 skip, garbage safety | ✅ |
+| `shadowscan` | 5 — target normalization incl. ports, queries, schemes, whitespace | ✅ |
 
 ## Findings
 
@@ -22,4 +22,4 @@
   lowercased hash string and could never match → detection now works.
 - Clippy (`cargo clippy --all-targets`): no warnings introduced.
 - The 4 crates previously had **zero** unit tests; this report adds the
-  first coverage.
+  first coverage (13 → 29 tests in the 2026-08-13 sweep).

@@ -366,4 +366,45 @@ mod tests {
         );
         assert_eq!(hash_with("md5", b"hello"), "5d41402abc4b2a76b9719d911017c592");
     }
+
+    #[test]
+    fn identify_more_hex_lengths() {
+        // 40 hex chars -> SHA1 family; 96 -> SHA384.
+        let sha1 = identify("a9993e364706816aba3e25717850c26c9cd0d89d");
+        assert!(sha1.iter().any(|s| s.contains("SHA1")), "{sha1:?}");
+        let sha224 = identify(&"ab".repeat(28));
+        assert!(sha224.iter().any(|s| s.contains("SHA224")), "{sha224:?}");
+        let sha384 = identify(&"ab".repeat(48));
+        assert!(sha384.iter().any(|s| s.contains("SHA384")), "{sha384:?}");
+        let crc16 = identify(&"ab".repeat(4));
+        assert!(crc16.iter().any(|s| s.contains("CRC16")), "{crc16:?}");
+    }
+
+    #[test]
+    fn identify_crypt_and_django_prefixes() {
+        let sha256_crypt = identify("$5$rounds=535000$wBcWwLeRbvNMf8hS$ylXEmvNHYJNgbYvSX4uqhO3kUo1pX9vN2");
+        assert!(sha256_crypt.iter().any(|s| s.contains("sha256-crypt")), "{sha256_crypt:?}");
+        let sha512_crypt = identify("$6$rounds=656000$hQdFQj6Gz0nQk1rQ$vQFZPk0lM4q5wJ2tV7sNqB1uD3fH8yW2");
+        assert!(sha512_crypt.iter().any(|s| s.contains("sha512-crypt")), "{sha512_crypt:?}");
+        let md5_crypt = identify("$1$salt$hashstring");
+        assert!(md5_crypt.iter().any(|s| s.contains("md5-crypt")), "{md5_crypt:?}");
+        let ldap = identify("{SHA1}base64encodeddigest");
+        assert!(ldap.iter().any(|s| s.contains("LDAP")), "{ldap:?}");
+        let django = identify("pbkdf2:sha256:100000$salt$hash");
+        assert!(django.iter().any(|s| s.contains("Django")), "{django:?}");
+    }
+
+    #[test]
+    fn phpass_uppercase_markers_are_recognized() {
+        // WordPress ($P$) and Drupal ($H$) markers must both match.
+        assert!(identify("$P$B5EhV6fL9pVlT7q8zYyGxJ3m2rWvU0k1").iter().any(|s| s.contains("phpass")));
+        assert!(identify("$H$B5EhV6fL9pVlT7q8zYyGxJ3m2rWvU0k1").iter().any(|s| s.contains("phpass")));
+    }
+
+    #[test]
+    fn identify_trims_whitespace() {
+        let clean = identify("d41d8cd98f00b204e9800998ecf8427e");
+        let padded = identify("  d41d8cd98f00b204e9800998ecf8427e \t");
+        assert_eq!(padded, clean);
+    }
 }

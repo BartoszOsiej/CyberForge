@@ -371,4 +371,36 @@ mod tests {
         assert_eq!(addrs, vec!["127.0.0.1".parse::<IpAddr>().unwrap()]);
         assert!(parse_cidr("999.1.1.1").is_err());
     }
+
+    #[test]
+    fn parse_ports_rejects_invalid_forms() {
+        assert!(parse_ports("").is_err(), "empty input must fail");
+        assert!(parse_ports(",,").is_err(), "only separators must fail");
+        assert!(parse_ports("80-79").is_err(), "lo > hi range must fail");
+        assert!(parse_ports("abc").is_err());
+        assert!(parse_ports("70000").is_err(), "out-of-range port must fail");
+    }
+
+    #[test]
+    fn parse_ports_keeps_overlapping_entries_in_order() {
+        assert_eq!(parse_ports("22-24,23").unwrap(), vec![22, 23, 24, 23]);
+        assert_eq!(parse_ports("  22 , 80 ").unwrap(), vec![22, 80]);
+    }
+
+    #[test]
+    fn parse_cidr_rejects_bad_prefixes() {
+        assert!(parse_cidr("10.0.0.0/33").is_err(), "prefix > 32 must fail");
+        assert!(parse_cidr("10.0.0.0/abc").is_err());
+        assert!(parse_cidr("10.0.0.0/24/24").is_err());
+    }
+
+    #[test]
+    fn service_names_cover_more_common_ports() {
+        assert_eq!(service_name(21), "ftp");
+        assert_eq!(service_name(25), "smtp");
+        assert_eq!(service_name(53), "dns");
+        assert_eq!(service_name(445), "microsoft-ds");
+        assert_eq!(service_name(3306), "mysql");
+        assert_eq!(service_name(0), "unknown");
+    }
 }
