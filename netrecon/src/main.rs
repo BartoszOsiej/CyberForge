@@ -335,3 +335,40 @@ fn main() {
     }
     println!("[*] done: {} probes, {} open", counter.load(Ordering::Relaxed), found.len());
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn service_names_are_known() {
+        assert_eq!(service_name(22), "ssh");
+        assert_eq!(service_name(80), "http");
+        assert_eq!(service_name(443), "https");
+        assert_eq!(service_name(3306), "mysql");
+        assert_eq!(service_name(5432), "postgresql");
+        assert_eq!(service_name(65_000), "unknown");
+    }
+
+    #[test]
+    fn parse_ports_handles_ranges_and_whitespace() {
+        assert_eq!(parse_ports("22,80, 443").unwrap(), vec![22, 80, 443]);
+        assert_eq!(parse_ports("22-24").unwrap(), vec![22, 23, 24]);
+        assert!(parse_ports("70000").is_err());
+    }
+
+    #[test]
+    fn parse_cidr_expands_subnets() {
+        let addrs = parse_cidr("10.0.0.0/30").unwrap();
+        assert_eq!(addrs.len(), 4);
+        assert_eq!(addrs[0].to_string(), "10.0.0.0");
+        assert_eq!(addrs[3].to_string(), "10.0.0.3");
+    }
+
+    #[test]
+    fn parse_cidr_accepts_single_ip() {
+        let addrs = parse_cidr("127.0.0.1").unwrap();
+        assert_eq!(addrs, vec!["127.0.0.1".parse::<IpAddr>().unwrap()]);
+        assert!(parse_cidr("999.1.1.1").is_err());
+    }
+}
