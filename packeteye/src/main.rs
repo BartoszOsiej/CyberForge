@@ -257,4 +257,71 @@ mod tests {
         assert_eq!(s.protocols.icmp, 1);
         assert_eq!(s.protocols.tcp, 0);
     }
+
+    #[test]
+    fn tcp_synack_is_counted() {
+        let mut pkt = tcp_syn_frame();
+        pkt[14 + 20 + 13] = 0x12; // flags: SYN|ACK
+        let mut s = Summary::default();
+        analyze_packet(&pkt, &mut s);
+        assert_eq!(s.tcp_synack, 1);
+        assert_eq!(s.tcp_syn, 0);
+    }
+
+    #[test]
+    fn tcp_fin_counts_as_tcp_traffic_not_handshake() {
+        let mut pkt = tcp_syn_frame();
+        pkt[14 + 20 + 13] = 0x01; // flags: FIN
+        let mut s = Summary::default();
+        analyze_packet(&pkt, &mut s);
+        assert_eq!(s.protocols.tcp, 1);
+        assert_eq!(s.tcp_syn, 0);
+        assert_eq!(s.tcp_synack, 0);
+    }
+
+    #[test]
+    fn udp_is_counted_with_ports() {
+        let mut pkt = tcp_syn_frame();
+        pkt[14 + 9] = 17; // protocol -> UDP
+        // Replace the TCP header with an 8-byte UDP header: sport 12345, dport 53.
+        pkt[14 + 20] = 0x30;
+        pkt[14 + 21] = 0x39;
+        pkt[14 + 22] = 0x00;
+        pkt[14 + 23] = 0x35;
+        pkt[14 + 24] = 0x00;
+        pkt[14 + 25] = 0x08;
+        pkt[14 + 26] = 0x00;
+        pkt[14 + 27] = 0x00;
+        let mut s = Summary::default();
+        analyze_packet(&pkt, &mut s);
+        assert_eq!(s.protocols.udp, 1);
+        assert_eq!(s.protocols.tcp, 0);
+        assert_eq!(s.per_port.get(&53), Some(&1));
+        assert_eq!(s.per_port.get(&12345), Some(&1));
+    }
+
+    #[test]
+    fn arp_frames_are_counted_without_protocol_classification() {
+        let mut pkt = tcp_syn_frame();
+        pkt[12] = 0x08;
+        pkt[13] = 0x06; // EtherType ARP (not IPv4)
+        let mut s = Summary::default();
+        analyze_packet(&pkt, &mut s);
+        assert_eq!(s.total, 1);
+        assert_eq!(s.protocols.tcp, 0);
+        assert_eq!(s.protocols.udp, 0);
+        assert_eq!(s.per_ip.len(), 0); // no L3 parse
+    }
+
+    #[test]
+    fn ipv6_frames_are_counted_as_total_but_not_parsed() {
+        let mut pkt = tcp_syn_frame();
+        pkt[12] = 0x86;
+        pkt[13] = 0xdd; // EtherType IPv6
+        let mut s = Summary::default();
+        analyze_packet(&pkt, &mut s);
+        assert_eq!(s.total, 1);
+        assert_eq!(s.protocols.other, 0); // skipped without classification
+        assert_eq!(s.per_ip.len(), 0);
+    }
 }
