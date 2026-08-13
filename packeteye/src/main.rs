@@ -195,3 +195,66 @@ fn main() {
         std::process::exit(1);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build a minimal Ethernet + IPv4 + TCP SYN frame.
+    fn tcp_syn_frame() -> Vec<u8> {
+        let mut pkt = Vec::new();
+        pkt.extend_from_slice(&[0u8; 6]);      // dst MAC
+        pkt.extend_from_slice(&[0u8; 6]);      // src MAC
+        pkt.extend_from_slice(&[0x08, 0x00]);  // EtherType IPv4
+        // IPv4 header (20 bytes, IHL=5, protocol=6 TCP).
+        pkt.push(0x45);                        // version + IHL
+        pkt.push(0x00);                        // DSCP/ECN
+        pkt.extend_from_slice(&[0x00, 0x2c]);  // total length
+        pkt.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // id/flags/frag
+        pkt.push(64);                          // TTL
+        pkt.push(6);                           // protocol: TCP
+        pkt.extend_from_slice(&[0x00, 0x00]);  // checksum (ignored)
+        pkt.extend_from_slice(&[10, 0, 0, 1]); // src IP
+        pkt.extend_from_slice(&[10, 0, 0, 2]); // dst IP
+        // TCP header (20 bytes), SYN flag set.
+        pkt.extend_from_slice(&[0x30, 0x39]);  // sport 12345
+        pkt.extend_from_slice(&[0x00, 0x50]);  // dport 80
+        pkt.extend_from_slice(&[0u8; 4]);      // seq
+        pkt.extend_from_slice(&[0u8; 4]);      // ack
+        pkt.push(0x50);                        // data offset 5
+        pkt.push(0x02);                        // flags: SYN
+        pkt.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); // window/checksum/urg
+        pkt
+    }
+
+    #[test]
+    fn counts_tcp_syn_into_summary() {
+        let mut s = Summary::default();
+        analyze_packet(&tcp_syn_frame(), &mut s);
+        assert_eq!(s.total, 1);
+        assert_eq!(s.tcp_syn, 1);
+        assert_eq!(s.tcp_synack, 0);
+        assert_eq!(s.protocols.tcp, 1);
+        assert_eq!(s.per_ip.get(&Ipv4Addr::new(10, 0, 0, 1)), Some(&1));
+        assert_eq!(s.per_port.get(&80), Some(&1));
+        assert_eq!(s.bytes, tcp_syn_frame().len() as u64);
+    }
+
+    #[test]
+    fn short_garbage_is_safe() {
+        let mut s = Summary::default();
+        analyze_packet(&[0u8; 5], &mut s);
+        assert_eq!(s.total, 1);
+        assert_eq!(s.protocols.other, 0); // too short to parse L3
+    }
+
+    #[test]
+    fn icmp_is_counted() {
+        let mut pkt = tcp_syn_frame();
+        pkt[14 + 9] = 1; // protocol -> ICMP
+        let mut s = Summary::default();
+        analyze_packet(&pkt, &mut s);
+        assert_eq!(s.protocols.icmp, 1);
+        assert_eq!(s.protocols.tcp, 0);
+    }
+}

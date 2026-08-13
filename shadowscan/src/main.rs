@@ -330,3 +330,24 @@ fn main() {
     }
     println!("\n[*] done: {} findings", findings.len());
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_target_adds_scheme_and_strips_slash() {
+        assert_eq!(normalize_target("example.com"), "http://example.com");
+        assert_eq!(normalize_target("  example.com/  "), "http://example.com");
+        assert_eq!(normalize_target("https://example.com"), "https://example.com");
+        assert_eq!(normalize_target("https://example.com///"), "https://example.com");
+    }
+
+    #[test]
+    fn normalize_target_keeps_paths() {
+        assert_eq!(
+            normalize_target("https://example.com/admin"),
+            "https://example.com/admin"
+        );
+    }
+}

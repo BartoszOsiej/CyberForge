@@ -36,7 +36,8 @@ fn identify(hash: &str) -> Vec<String> {
     if lower.starts_with("$apr1$") {
         out.push("Apache MD5 ($apr1$)".into());
     }
-    if lower.starts_with("$P$") || lower.starts_with("$H$") {
+    // phpass markers can be upper- or lower-case; `lower` is lowercase.
+    if lower.starts_with("$p$") || lower.starts_with("$h$") {
         out.push("phpass (WordPress/Drupal)".into());
     }
     if lower.starts_with("{sha1}") {
@@ -320,5 +321,49 @@ fn main() {
             brute_mode(hash, charset, maxlen, &algo);
         }
         other => eprintln!("unknown command: {other}"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn identify_known_hex_digests() {
+        let md5 = identify("5f4dcc3b5aa765d61d8327deb882cf99");
+        assert!(md5.iter().any(|s| s.contains("MD5")), "{md5:?}");
+        let sha256 = identify("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+        assert!(sha256.iter().any(|s| s.contains("SHA256")), "{sha256:?}");
+        let sha512 = identify("cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e");
+        // 128 hex chars -> SHA512 family.
+        assert!(sha512.iter().any(|s| s.contains("SHA512")), "{sha512:?}");
+    }
+
+    #[test]
+    fn identify_crypt_prefixes() {
+        let bcrypt = identify("$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy");
+        assert!(bcrypt.iter().any(|s| s.contains("bcrypt")), "{bcrypt:?}");
+        let phpass = identify("$P$B5EhV6fL9pVlT7q8zYyGxJ3m2rWvU0k1");
+        assert!(phpass.iter().any(|s| s.contains("phpass")), "{phpass:?}");
+    }
+
+    #[test]
+    fn unknown_format_is_reported() {
+        assert_eq!(identify("zzz-not-a-hash"), vec!["unknown format"]);
+    }
+
+    #[test]
+    fn digest_helpers_match_known_vectors() {
+        assert_eq!(md5_hex(b""), "d41d8cd98f00b204e9800998ecf8427e");
+        assert_eq!(md5_hex(b"hello"), "5d41402abc4b2a76b9719d911017c592");
+        assert_eq!(
+            sha1_hex(b"abc"),
+            "a9993e364706816aba3e25717850c26c9cd0d89d"
+        );
+        assert_eq!(
+            sha256_hex(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        assert_eq!(hash_with("md5", b"hello"), "5d41402abc4b2a76b9719d911017c592");
     }
 }
