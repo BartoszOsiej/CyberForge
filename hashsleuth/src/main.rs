@@ -126,7 +126,7 @@ fn dict_mode(target: &str, wordlist: &str, algo: &str) {
     let found = Arc::new(AtomicBool::new(false));
     let target_arc = target.to_string();
 
-    let workers = num_cpus::get().max(2).min(32);
+    let workers = num_cpus::get().clamp(2, 32);
     let mut handles = Vec::new();
     let mut seen = 0usize;
     for line in reader.lines() {
@@ -181,7 +181,7 @@ fn brute_mode(target: &str, charset: &str, max_len: usize, algo: &str) {
         eprintln!("error: non-empty charset and maxlen >= 1 required");
         std::process::exit(1);
     }
-    let workers = num_cpus::get().max(2).min(32);
+    let workers = num_cpus::get().clamp(2, 32);
     let mut handles = Vec::new();
     let target_arc = target.to_string();
     let algo_arc = algo.to_string();

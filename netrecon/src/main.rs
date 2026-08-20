@@ -139,7 +139,7 @@ fn parse_cidr(s: &str) -> Result<Vec<IpAddr>, String> {
 }
 
 fn expand_targets(args: &[String]) -> Result<Vec<(IpAddr, u16)>, String> {
-    let host_arg = args.get(0).ok_or("usage: netrecon <target> [ports] [options]")?;
+    let host_arg = args.first().ok_or("usage: netrecon <target> [ports] [options]")?;
     let port_arg = args.get(1).map(|s| s.as_str()).unwrap_or("1-1024");
     let addrs = parse_cidr(host_arg)?;
     let ports = parse_ports(port_arg)?;
@@ -262,7 +262,7 @@ fn main() {
         }
     };
 
-    let threads = threads.max(1).min(4096);
+    let threads = threads.clamp(1, 4096);
     let timeout = Duration::from_millis(timeout_ms);
     println!(
         "[*] NetRecon {} | {} probes | {} workers | timeout {}ms",
