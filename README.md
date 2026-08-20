@@ -1,5 +1,7 @@
 # Cybersec Tools
 
+[![CI](https://github.com/BartoszOsiej/cybersec-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/BartoszOsiej/cybersec-tools/actions)
+
 A Rust workspace of four small, single-purpose security tools — network
 reconnaissance, web scanning, hash analysis, and packet inspection. Each tool
 is a standalone binary with no shared runtime; everything builds from the
