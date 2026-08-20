@@ -13,9 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: rustup toolchain install stable
+      - run: sudo apt-get update && sudo apt-get install -y libpcap-dev && rustup toolchain install stable
       - run: cargo build --release
-      - uses: softprops/action-gh-release@v2
+      - name: Attach binaries
+        uses: softprops/action-gh-release@v2
         with:
-          files: target/release/*
+          files: |
+            target/release/netrecon
+            target/release/shadowscan
+            target/release/hashsleuth
+            target/release/packeteye
           generate_release_notes: true
