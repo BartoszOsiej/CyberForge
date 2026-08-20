@@ -150,5 +150,3 @@ be illegal in your jurisdiction.
 MIT
 
 ---
-
-> 🤖 Generated with [Codebuff](https://codebuff.com) · [Portfolio](https://bartoszosiej.github.io/Portfolio/)
