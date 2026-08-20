@@ -103,11 +103,9 @@ fn check_headers(agent: &Agent, base: &str, findings: &mut Vec<String>) {
             }
             let server = resp
                 .header("server")
-                .map(|v| v)
                 .unwrap_or("?");
             let powered = resp
                 .header("x-powered-by")
-                .map(|v| v)
                 .unwrap_or("none");
             findings.push(format!(
                 "[header] server={server}, x-powered-by={powered} (present {found}/{} security headers)",
