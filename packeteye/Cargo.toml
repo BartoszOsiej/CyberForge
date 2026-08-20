@@ -6,4 +6,4 @@ description = "Packet capture analyzer: live sniffing and offline pcap parsing w
 license = "MIT"
 
 [dependencies]
-pcap = "1"
+pcap = "2"
