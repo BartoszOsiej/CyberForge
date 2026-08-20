@@ -1,9 +1,20 @@
-FROM rust:1-bookworm AS builder
-RUN apt-get update && apt-get install -y libclang-dev libpcap-dev pkg-config libx11-dev libxi-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev && rm -rf /var/lib/apt/lists/*
-WORKDIR /build
+# ── Stage 1: Build ──
+FROM rust:1.80-bookworm AS builder
+WORKDIR /src
 COPY . .
-RUN cargo build --release
+RUN cargo build --release --workspace
+
+# ── Stage 2: Runtime ──
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y ca-certificates libpcap0.8 libx11-6 libxkbcommon0 libwayland-client0 libgl1 && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /build/target/release/ /usr/bin/
-ENTRYPOINT ["/usr/bin/netrecon"]
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libssl3 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /src/target/release/netrecon /usr/local/bin/
+COPY --from=builder /src/target/release/packeteye /usr/local/bin/
+COPY --from=builder /src/target/release/shadowscan /usr/local/bin/
+COPY --from=builder /src/target/release/hashsleuth /usr/local/bin/
+RUN chmod +x /usr/local/bin/netrecon /usr/local/bin/packeteye \
+    /usr/local/bin/shadowscan /usr/local/bin/hashsleuth
+RUN useradd -m sec
+USER sec
+ENTRYPOINT ["netrecon"]
