@@ -1,100 +1,88 @@
-<img src="https://capsule-render.vercel.app/api?type=cylinder&color=0:0d1117,50:2ea043,100:a3d6ff&height=140&section=header&text=Cybersec%20Tools&fontSize=36&fontColor=fff&desc=four%20Rust%20security%20tools%20%C2%B7%20recon%20%C2%B7%20web%20%C2%B7%20crypto%20%C2%B7%20packets&descSize=15&descAlignY=72" width="100%" />
+# 🔒 Cybersec Tools
 
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Rust](https://img.shields.io/badge/Rust-2021-DEA584?style=flat-square&logo=rust)
+![crates.io](https://img.shields.io/crates/v/netrecon?style=flat-square&label=netrecon&logo=rust)
+![crates.io](https://img.shields.io/crates/v/shadowscan?style=flat-square&label=shadowscan&logo=rust)
+![crates.io](https://img.shields.io/crates/v/hashsleuth?style=flat-square&label=hashsleuth&logo=rust)
+![crates.io](https://img.shields.io/crates/v/packeteye?style=flat-square&label=packeteye&logo=rust)
+![Docker](https://img.shields.io/badge/Docker-GHCR-2496ED?style=flat-square&logo=docker)
 
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/BartoszOsiej/cybersec-tools/badge)](https://scorecard.dev/viewer/?uri=github.com/BartoszOsiej/cybersec-tools)
+**A Rust workspace of four small, single-purpose security tools — network
+reconnaissance, web scanning, hash analysis, and packet inspection.**
 
-<div align="center">
+> 🇵🇱 [Wersja polska](README.pl.md) · [Documentation](https://bartoszosiej.github.io/Docs/projects/cybersec-tools/)
 
-[![crates.io](https://img.shields.io/crates/v/netrecon?style=for-the-badge&logo=rust&label=netrecon)](https://crates.io/crates/netrecon)
-[![crates.io](https://img.shields.io/crates/v/shadowscan?style=for-the-badge&logo=rust&label=shadowscan)](https://crates.io/crates/shadowscan)
-[![crates.io](https://img.shields.io/crates/v/hashsleuth?style=for-the-badge&logo=rust&label=hashsleuth)](https://crates.io/crates/hashsleuth)
-[![crates.io](https://img.shields.io/crates/v/packeteye?style=for-the-badge&logo=rust&label=packeteye)](https://crates.io/crates/packeteye)
-[![GHCR](https://img.shields.io/badge/GHCR-image-2496ED?style=for-the-badge&logo=docker)](https://github.com/BartoszOsiej/cybersec-tools/pkgs/container/cybersec-tools)
-[![Release](https://img.shields.io/badge/release-4%20binaries-8A2BE2?style=for-the-badge&logo=github)](https://github.com/BartoszOsiej/cybersec-tools/releases)
-[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+---
 
-**A Rust workspace of four single-purpose security tools.** Each tool is a
-standalone binary with no shared runtime; everything builds from the workspace root.
+## Table of Contents
 
-</div>
+- [Tools](#tools)
+- [Quick Start](#quick-start)
+- [Tool Details](#tool-details)
+- [Build](#build)
+- [Docker](#docker)
+- [Security Note](#security-note)
+- [License](#license)
 
-| Tool | Mission |
-|---|---|
-| 🔍 **[`netrecon`](https://crates.io/crates/netrecon)** | Asynchronous TCP port scanner + banner grabbing + service fingerprinting |
-| 🕸️ **[`shadowscan`](https://crates.io/crates/shadowscan)** | Web vulnerability scanner: header audit, TLS checks, SQLi/XSS probes, path discovery |
-| 🔑 **[`hashsleuth`](https://crates.io/crates/hashsleuth)** | Hash identifier, dictionary cracker, masked brute-forcer |
-| 📡 **[`packeteye`](https://crates.io/crates/packeteye)** | Packet capture analyzer: live sniffing + offline pcap parsing with protocol stats |
+---
 
-## Build
+## Tools
+
+```
+cybersec-tools/
+├── netrecon/      TCP port scanner + banner grabbing + service fingerprinting
+├── shadowscan/    Web vulnerability scanner: header audit, TLS, SQLi/XSS probes
+├── hashsleuth/    Hash identifier, dictionary cracker, masked brute-forcer
+└── packeteye/     Packet capture analyzer: live sniffing + offline pcap parsing
+```
+
+---
+
+## Quick Start
 
 ```bash
+# Install from crates.io
+cargo install netrecon shadowscan hashsleuth packeteye
+
+# Or build from source
+git clone https://github.com/BartoszOsiej/cybersec-tools.git
+cd cybersec-tools
 cargo build --release
-# binaries: target/release/{netrecon,shadowscan,hashsleuth,packeteye}
+
+# Binaries: target/release/{netrecon,shadowscan,hashsleuth,packeteye}
 ```
 
-Release profile is tuned for size and speed: full LTO, `opt-level = 3`, symbol stripping.
+---
 
-## 🎮 Run the tools from a GitHub comment
+## Tool Details
 
-Comment on [the Playground issue](https://github.com/BartoszOsiej/cybersec-tools/issues/10):
-
-```
-/run hashsleuth identify 5f4dcc3b5aa765d61d8327deb882cf99
-/run netrecon 127.0.0.1 22,80,443
-```
-
-The bot builds the workspace in an isolated runner, executes with a 60 s timeout and posts the output back. Guardrails: whitelisted tools · strict argument charset · netrecon loopback-only · brute capped at `maxlen ≤ 6`.
-
-## 📺 Live terminal demos
-
-Rendered reproducibly in CI from [`vhs` tapes](.github/vhs/) — what you see is what the binaries actually print:
-
-| hashsleuth | netrecon |
-|---|---|
-| ![hashsleuth demo](assets/demo-hashsleuth.svg) | ![netrecon demo](assets/demo-netrecon.svg) |
-
-
-## 🔏 Verify a release yourself
-
-```bash
-./verify.sh v0.4.5
-```
-
-One command checks SLSA build provenance (`gh attestation verify`), Sigstore keyless signatures (`cosign verify`) and unpacks the SPDX SBOM. No trust required — everything is reproducible from public logs.
-
-<a href="https://codespaces.new/BartoszOsiej/cybersec-tools?devcontainer_path=.devcontainer/devcontainer.json">
-  <img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" />
-</a>
-
-<details>
-<summary><b>🔍 netrecon — port scanner</b></summary>
+### 🔍 netrecon — Port Scanner
 
 ```bash
 netrecon <target> [--ports 1-1000] [--timeout 1000]
 ```
 
-- Asynchronous TCP connect scanning
-- Banner grabbing on open ports
-- Service fingerprinting
+| Feature | Description |
+|---|---|
+| Async TCP scan | Tokio-based concurrent port scanning |
+| Banner grabbing | Reads service banners on open ports |
+| Service fingerprinting | Identifies running services from banners |
 
-</details>
-
-<details>
-<summary><b>🕸️ shadowscan — web scanner</b></summary>
+### 🕵️ shadowscan — Web Scanner
 
 ```bash
 shadowscan <url>
 ```
 
-- Security header audit (`Strict-Transport-Security`, `X-Frame-Options`, CSP, …)
-- TLS certificate checks
-- SQLi / XSS reflection probes
-- Common-path discovery
+| Feature | Description |
+|---|---|
+| Header audit | HSTS, X-Frame-Options, CSP, and more |
+| TLS checks | Certificate validity, protocol versions |
+| SQLi/XSS probes | Reflection-based vulnerability detection |
+| Path discovery | Common admin/debug path enumeration |
 
-</details>
-
-<details>
-<summary><b>🔑 hashsleuth — hash analysis</b></summary>
+### 🔑 hashsleuth — Hash Analysis
 
 ```bash
 hashsleuth <hash>
@@ -102,37 +90,65 @@ hashsleuth <hash> --dict wordlist.txt
 hashsleuth <hash> --bruteforce --charset abc123 --max-len 6
 ```
 
-- Hash type identification (MD5, SHA-1, SHA-256, …)
-- Dictionary cracking
-- Masked brute-force with custom charsets
+| Feature | Description |
+|---|---|
+| Type identification | MD5, SHA-1, SHA-256, bcrypt, and more |
+| Dictionary cracking | Wordlist-based attack |
+| Masked brute-force | Custom charsets, configurable length |
 
-</details>
-
-<details>
-<summary><b>📡 packeteye — packet analysis</b></summary>
+### 📡 packeteye — Packet Analysis
 
 ```bash
 packeteye -i eth0            # live capture
 packeteye -r capture.pcap    # offline pcap analysis
 ```
 
-- Live packet sniffing
-- Offline pcap parsing
-- Per-protocol statistics
-
-</details>
-
-> [!CAUTION]
-> These are security tools by design. Use them only on systems and networks you
-> own or are explicitly authorized to test. Unauthorized scanning or probing may
-> be illegal in your jurisdiction.
+| Feature | Description |
+|---|---|
+| Live sniffing | Real-time packet capture on interfaces |
+| Offline parsing | pcap file analysis |
+| Protocol stats | Per-protocol breakdown and statistics |
 
 ---
 
-<div align="center">
+## Build
 
-**Part of [BartoszOsiej](https://github.com/BartoszOsiej)'s security stack** · [`halcyon-process-monitor`](https://github.com/BartoszOsiej/halcyon-process-monitor) — eBPF ransomware tracker
+```bash
+cargo build --release
+```
 
-MIT © 2026 Bartosz Osiej
+Release profile: full LTO, `opt-level = 3`, symbol stripping — optimized for
+size and speed.
 
-</div>
+---
+
+## Docker
+
+```bash
+# Build
+docker build -t cybersec-tools .
+
+# Run netrecon
+docker run --rm cybersec-tools netrecon scanme.nmap.org
+
+# Run hashsleuth
+docker run --rm cybersec-tools hashsleuth 5d41402abc4b2a76b9719d911017c592
+```
+
+---
+
+## Security Note
+
+These are security tools by design. Use them only on systems and networks you
+own or are explicitly authorized to test. Unauthorized scanning or probing may
+be illegal in your jurisdiction.
+
+---
+
+## License
+
+MIT
+
+---
+
+> 🤖 Generated with [Codebuff](https://codebuff.com) · [Portfolio](https://bartoszosiej.github.io/Portfolio/)
