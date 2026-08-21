@@ -1,5 +1,8 @@
 <img src="https://capsule-render.vercel.app/api?type=cylinder&color=0:0d1117,50:2ea043,100:a3d6ff&height=140&section=header&text=Cybersec%20Tools&fontSize=36&fontColor=fff&desc=four%20Rust%20security%20tools%20%C2%B7%20recon%20%C2%B7%20web%20%C2%B7%20crypto%20%C2%B7%20packets&descSize=15&descAlignY=72" width="100%" />
 
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/BartoszOsiej/cybersec-tools/badge)](https://scorecard.dev/viewer/?uri=github.com/BartoszOsiej/cybersec-tools)
+
 <div align="center">
 
 [![crates.io](https://img.shields.io/crates/v/netrecon?style=for-the-badge&logo=rust&label=netrecon)](https://crates.io/crates/netrecon)
