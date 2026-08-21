@@ -45,6 +45,15 @@ Comment on [the Playground issue](https://github.com/BartoszOsiej/cybersec-tools
 
 The bot builds the workspace in an isolated runner, executes with a 60 s timeout and posts the output back. Guardrails: whitelisted tools · strict argument charset · netrecon loopback-only · brute capped at `maxlen ≤ 6`.
 
+## 📺 Live terminal demos
+
+Rendered reproducibly in CI from [`vhs` tapes](.github/vhs/) — what you see is what the binaries actually print:
+
+| hashsleuth | netrecon |
+|---|---|
+| ![hashsleuth demo](assets/demo-hashsleuth.svg) | ![netrecon demo](assets/demo-netrecon.svg) |
+
+
 ## 🔏 Verify a release yourself
 
 ```bash
