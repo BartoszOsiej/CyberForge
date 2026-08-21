@@ -34,6 +34,29 @@ cargo build --release
 
 Release profile is tuned for size and speed: full LTO, `opt-level = 3`, symbol stripping.
 
+## 🎮 Run the tools from a GitHub comment
+
+Comment on [the Playground issue](https://github.com/BartoszOsiej/cybersec-tools/issues/10):
+
+```
+/run hashsleuth identify 5f4dcc3b5aa765d61d8327deb882cf99
+/run netrecon 127.0.0.1 22,80,443
+```
+
+The bot builds the workspace in an isolated runner, executes with a 60 s timeout and posts the output back. Guardrails: whitelisted tools · strict argument charset · netrecon loopback-only · brute capped at `maxlen ≤ 6`.
+
+## 🔏 Verify a release yourself
+
+```bash
+./verify.sh v0.4.5
+```
+
+One command checks SLSA build provenance (`gh attestation verify`), Sigstore keyless signatures (`cosign verify`) and unpacks the SPDX SBOM. No trust required — everything is reproducible from public logs.
+
+<a href="https://codespaces.new/BartoszOsiej/cybersec-tools?devcontainer_path=.devcontainer/devcontainer.json">
+  <img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" />
+</a>
+
 <details>
 <summary><b>🔍 netrecon — port scanner</b></summary>
 
