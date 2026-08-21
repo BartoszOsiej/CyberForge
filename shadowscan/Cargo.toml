@@ -7,5 +7,5 @@ description = "Web vulnerability scanner: headers audit, TLS checks, SQLi/XSS re
 license = "MIT"
 
 [dependencies]
-ureq = "2"
+ureq = "3"
 openssl = "0.10"
