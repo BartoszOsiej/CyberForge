@@ -48,16 +48,18 @@ jobs:
           cp "target/${{ matrix.target }}/release/netrecon${{ matrix.ext }}" "stage/netrecon-${{ matrix.target }}${{ matrix.ext }}"
           cp "target/${{ matrix.target }}/release/hashsleuth${{ matrix.ext }}" "stage/hashsleuth-${{ matrix.target }}${{ matrix.ext }}"
       - name: Generate build provenance (SLSA v1 attestation)
+        id: attest
         uses: actions/attest-build-provenance@v1
         with:
           subject-path: |
             stage/netrecon-${{ matrix.target }}${{ matrix.ext }}
             stage/hashsleuth-${{ matrix.target }}${{ matrix.ext }}
-          bundle-path: provenance-${{ matrix.target }}.jsonl
       - name: Attach to release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
         run: |
-          gh release upload "${{ github.ref_name }}" \
-            stage/* "provenance-${{ matrix.target }}.jsonl" --clobber
+          FILES="stage/*"
+          if [ -n "$BUNDLE" ] && [ -f "$BUNDLE" ]; then FILES="$FILES $BUNDLE"; fi
+          gh release upload "${{ github.ref_name }}" $FILES --clobber
