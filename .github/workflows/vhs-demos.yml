@@ -40,17 +40,11 @@ jobs:
           hashsleuth identify 5f4dcc3b5aa765d61d8327deb882cf99
           netrecon --help >/dev/null
 
-      - name: Install vhs (native, not containerized - outputs must land in workspace)
+      - name: Render demos (official vhs image - pins a compatible ffmpeg)
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq ttyd ffmpeg
-          curl -fsSL "https://github.com/charmbracelet/vhs/releases/download/v0.9.0/vhs_0.9.0_Linux_x86_64.tar.gz" | tar xz
-          sudo mv vhs_0.9.0_Linux_x86_64/vhs /usr/local/bin/vhs
-          vhs --version
-
-      - name: Render demos
-        run: |
-          vhs .github/vhs/hashsleuth.tape
-          vhs .github/vhs/netrecon.tape
+          for TAPE in .github/vhs/*.tape; do
+            docker run --rm -v "$PWD":/vhs -w /vhs ghcr.io/charmbracelet/vhs:v0.9.0 "$TAPE"
+          done
           ls -la assets/
 
       - name: Commit rendered demos
