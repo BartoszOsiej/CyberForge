@@ -1,0 +1,122 @@
+name: command-bot
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: cmd-${{ github.event.comment.id }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    if: ${{ !github.event.issue.pull_request && startsWith(github.event.comment.body, '/run') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse and validate command
+        id: cmd
+        env:
+          COMMENT: ${{ github.event.comment.body }}
+        run: |
+          # first line: "/run <tool> [args...]"
+          CMD_LINE=$(head -n 1 <<< "$COMMENT" | sed 's/\r$//')
+          ARGS="${CMD_LINE#/run}"
+          ARGS="$(echo "$ARGS" | xargs)"
+
+          TOOL=$(awk '{print $1}' <<< "$ARGS")
+          REST=$(cut -d' ' -f2- <<< "$ARGS")
+
+          case "$TOOL" in
+            netrecon|hashsleuth|shadowscan|packeteye) ;;
+            "") echo "::error::usage: /run <tool> [args...]"; exit 1 ;;
+            *) echo "::error::unknown tool '$TOOL' (allowed: netrecon, hashsleuth, shadowscan, packeteye)"; exit 1 ;;
+          esac
+
+          # strict argument charset - no shell metacharacters ever reach bash
+          if [[ -n "$REST" ]] && ! [[ "$REST" =~ ^[a-zA-Z0-9._=,:+/ -]+$ ]]; then
+            echo "::error::invalid characters in arguments"
+            exit 1
+          fi
+
+          # netrecon may only scan loopback from the bot
+          if [[ "$TOOL" == "netrecon" && -n "$REST" && "$REST" != 127.0.0.1* && "$REST" != ::1* && "$REST" != localhost* && "$REST" != "--"* ]]; then
+            echo "::error::netrecon via /run is restricted to 127.0.0.1 targets"
+            exit 1
+          fi
+
+          # brute force capped so the runner does not melt
+          if [[ "$TOOL" == "hashsleuth" && "$REST" == brute* ]]; then
+            MAXLEN=$(awk '{for(i=1;i<=NF;i++) if($i ~ /^[0-9]+$/){print $i; exit}}' <<< "$REST")
+            if [[ -z "$MAXLEN" || "$MAXLEN" -gt 6 ]]; then
+              echo "::error::brute maxlen is capped at 6 on the bot"
+              exit 1
+            fi
+          fi
+
+          {
+            echo "tool=$TOOL"
+            echo "args=$REST"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: rust-lang/simple-rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build workspace
+        run: cargo build --release
+
+      - name: Execute
+        id: exec
+        env:
+          TOOL: ${{ steps.cmd.outputs.tool }}
+          ARGS: ${{ steps.cmd.outputs.args }}
+        run: |
+          set +e
+          OUT=$(timeout 60 "./target/release/$TOOL" $ARGS 2>&1)
+          CODE=$?
+          {
+            echo "code=$CODE"
+            echo "output<<EOF"
+            echo "$OUT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CODE: ${{ steps.exec.outputs.code }}
+          OUTPUT: ${{ steps.exec.outputs.output }}
+          TOOL: ${{ steps.cmd.outputs.tool }}
+          ARGS: ${{ steps.cmd.outputs.args }}
+          NUMBER: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.event.comment.user.login }}
+        run: |
+          if [[ "$CODE" == "0" ]]; then
+            gh api repos/${{ github.repository }}/issues/$NUMBER/reactions -f content="+1" >/dev/null
+            VERDICT="✅ **exit 0**"
+          else
+            gh api repos/${{ github.repository }}/issues/$NUMBER/reactions -f content="-1" >/dev/null
+            VERDICT="❌ **exit $CODE**"
+          fi
+
+          OUTPUT_TRUNC=$(head -c 3500 <<< "$OUTPUT")
+          {
+            echo "@${ACTOR} \`/run ${TOOL} ${ARGS}\`"
+            echo ""
+            echo "$VERDICT"
+            echo ""
+            echo '```'
+            echo "$OUTPUT_TRUNC"
+            echo '```'
+            echo ""
+            echo "<sub>built from \`${GITHUB_SHA::7}\` · executed in an isolated GitHub Actions runner · 60 s timeout</sub>"
+          } > body.md
+          gh issue comment $NUMBER --body-file body.md
