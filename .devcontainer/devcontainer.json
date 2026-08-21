@@ -1,13 +1,23 @@
 {
   "name": "cybersec-tools",
-  "image": "mcr.microsoft.com/devcontainers/rust:1-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/rust:1",
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/rust-tools:1": {
+      "version": "latest",
+      "profile": "default"
+    }
   },
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y libpcap-dev && cargo build",
+  "postCreateCommand": "cargo build --release && cargo test",
+  "forwardPorts": [],
   "customizations": {
     "vscode": {
-      "extensions": ["rust-lang.rust-analyzer", "serayuzgur.crates", "tamasfe.even-better-toml"]
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "github.vscode-pull-request-github"
+      ]
     }
   }
 }
