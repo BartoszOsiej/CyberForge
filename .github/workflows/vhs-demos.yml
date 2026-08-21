@@ -42,9 +42,9 @@ jobs:
 
       - name: Install vhs (native, not containerized - outputs must land in workspace)
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq ttyd ffmpeg libx11-dev
-          VHS_VER=v0.9.0
-          curl -fsSL "https://github.com/charmbracelet/vhs/releases/download/${VHS_VER}/vhs_0.9.0_Linux_x86_64.tar.gz" | sudo tar xz -C /usr/local/bin vhs
+          sudo apt-get update -qq && sudo apt-get install -y -qq ttyd ffmpeg
+          curl -fsSL "https://github.com/charmbracelet/vhs/releases/download/v0.9.0/vhs_0.9.0_Linux_x86_64.tar.gz" | tar xz
+          sudo mv vhs_0.9.0_Linux_x86_64/vhs /usr/local/bin/vhs
           vhs --version
 
       - name: Render demos
