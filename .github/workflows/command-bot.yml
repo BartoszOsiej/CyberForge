@@ -41,7 +41,8 @@ jobs:
           esac
 
           # strict argument charset - no shell metacharacters ever reach bash
-          if [[ -n "$REST" ]] && ! [[ "$REST" =~ ^[a-zA-Z0-9._=,:+/ -]+$ ]]; then
+          ARG_RE='^[a-zA-Z0-9._=,:+/ -]+$'
+          if [[ -n "$REST" ]] && ! [[ "$REST" =~ $ARG_RE ]]; then
             echo "::error::invalid characters in arguments"
             exit 1
           fi
