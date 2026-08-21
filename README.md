@@ -1,19 +1,26 @@
-# Cybersec Tools
+<img src="https://capsule-render.vercel.app/api?type=cylinder&color=0:0d1117,50:2ea043,100:a3d6ff&height=140&section=header&text=Cybersec%20Tools&fontSize=36&fontColor=fff&desc=four%20Rust%20security%20tools%20%C2%B7%20recon%20%C2%B7%20web%20%C2%B7%20crypto%20%C2%B7%20packets&descSize=15&descAlignY=72" width="100%" />
 
-[![CI](https://github.com/BartoszOsiej/cybersec-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/BartoszOsiej/cybersec-tools/actions)
+<div align="center">
 
-A Rust workspace of four small, single-purpose security tools — network
-reconnaissance, web scanning, hash analysis, and packet inspection. Each tool
-is a standalone binary with no shared runtime; everything builds from the
-workspace root.
+[![crates.io](https://img.shields.io/crates/v/netrecon?style=for-the-badge&logo=rust&label=netrecon)](https://crates.io/crates/netrecon)
+[![crates.io](https://img.shields.io/crates/v/shadowscan?style=for-the-badge&logo=rust&label=shadowscan)](https://crates.io/crates/shadowscan)
+[![crates.io](https://img.shields.io/crates/v/hashsleuth?style=for-the-badge&logo=rust&label=hashsleuth)](https://crates.io/crates/hashsleuth)
+[![crates.io](https://img.shields.io/crates/v/packeteye?style=for-the-badge&logo=rust&label=packeteye)](https://crates.io/crates/packeteye)
+[![GHCR](https://img.shields.io/badge/GHCR-image-2496ED?style=for-the-badge&logo=docker)](https://github.com/BartoszOsiej/cybersec-tools/pkgs/container/cybersec-tools)
+[![Release](https://img.shields.io/badge/release-4%20binaries-8A2BE2?style=for-the-badge&logo=github)](https://github.com/BartoszOsiej/cybersec-tools/releases)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 
-```
-cybersec-tools/
-├── netrecon/      Asynchronous TCP port scanner + banner grabbing + service fingerprinting
-├── shadowscan/    Web vulnerability scanner: header audit, TLS checks, SQLi/XSS probes, path discovery
-├── hashsleuth/    Hash identifier, dictionary cracker, masked brute-forcer
-└── packeteye/     Packet capture analyzer: live sniffing + offline pcap parsing with protocol stats
-```
+**A Rust workspace of four single-purpose security tools.** Each tool is a
+standalone binary with no shared runtime; everything builds from the workspace root.
+
+</div>
+
+| Tool | Mission |
+|---|---|
+| 🔍 **[`netrecon`](https://crates.io/crates/netrecon)** | Asynchronous TCP port scanner + banner grabbing + service fingerprinting |
+| 🕸️ **[`shadowscan`](https://crates.io/crates/shadowscan)** | Web vulnerability scanner: header audit, TLS checks, SQLi/XSS probes, path discovery |
+| 🔑 **[`hashsleuth`](https://crates.io/crates/hashsleuth)** | Hash identifier, dictionary cracker, masked brute-forcer |
+| 📡 **[`packeteye`](https://crates.io/crates/packeteye)** | Packet capture analyzer: live sniffing + offline pcap parsing with protocol stats |
 
 ## Build
 
@@ -22,12 +29,10 @@ cargo build --release
 # binaries: target/release/{netrecon,shadowscan,hashsleuth,packeteye}
 ```
 
-Release profile is tuned for size and speed: full LTO, `opt-level = 3`,
-symbol stripping.
+Release profile is tuned for size and speed: full LTO, `opt-level = 3`, symbol stripping.
 
-## Tools
-
-### netrecon — port scanner
+<details>
+<summary><b>🔍 netrecon — port scanner</b></summary>
 
 ```bash
 netrecon <target> [--ports 1-1000] [--timeout 1000]
@@ -37,7 +42,10 @@ netrecon <target> [--ports 1-1000] [--timeout 1000]
 - Banner grabbing on open ports
 - Service fingerprinting
 
-### shadowscan — web scanner
+</details>
+
+<details>
+<summary><b>🕸️ shadowscan — web scanner</b></summary>
 
 ```bash
 shadowscan <url>
@@ -48,7 +56,10 @@ shadowscan <url>
 - SQLi / XSS reflection probes
 - Common-path discovery
 
-### hashsleuth — hash analysis
+</details>
+
+<details>
+<summary><b>🔑 hashsleuth — hash analysis</b></summary>
 
 ```bash
 hashsleuth <hash>
@@ -60,7 +71,10 @@ hashsleuth <hash> --bruteforce --charset abc123 --max-len 6
 - Dictionary cracking
 - Masked brute-force with custom charsets
 
-### packeteye — packet analysis
+</details>
+
+<details>
+<summary><b>📡 packeteye — packet analysis</b></summary>
 
 ```bash
 packeteye -i eth0            # live capture
@@ -71,8 +85,19 @@ packeteye -r capture.pcap    # offline pcap analysis
 - Offline pcap parsing
 - Per-protocol statistics
 
-## Security note
+</details>
 
-These are security tools by design. Use them only on systems and networks you
-own or are explicitly authorized to test. Unauthorized scanning or probing may
-be illegal in your jurisdiction.
+> [!CAUTION]
+> These are security tools by design. Use them only on systems and networks you
+> own or are explicitly authorized to test. Unauthorized scanning or probing may
+> be illegal in your jurisdiction.
+
+---
+
+<div align="center">
+
+**Part of [BartoszOsiej](https://github.com/BartoszOsiej)'s security stack** · [`halcyon-process-monitor`](https://github.com/BartoszOsiej/halcyon-process-monitor) — eBPF ransomware tracker
+
+MIT © 2026 Bartosz Osiej
+
+</div>
