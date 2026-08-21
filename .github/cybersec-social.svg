@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="100%" style="stop-color:#161b22"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ef4444"/>
+      <stop offset="100%" style="stop-color:#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect x="40" y="40" width="1200" height="560" rx="16" fill="none" stroke="url(#accent)" stroke-width="2" opacity="0.3"/>
+  
+  <text x="640" y="180" font-family="monospace" font-size="80" fill="url(#accent)" text-anchor="middle">🔒</text>
+  <text x="640" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="bold" fill="#f0f6fc" text-anchor="middle">Cybersec Tools</text>
+  <text x="640" y="340" font-family="monospace" font-size="28" fill="#8b949e" text-anchor="middle">Rust · Tokio · Security Suite</text>
+  
+  <rect x="180" y="380" width="180" height="48" rx="24" fill="#1f6feb" opacity="0.2"/>
+  <text x="270" y="410" font-family="monospace" font-size="16" fill="#58a6ff" text-anchor="middle">netrecon</text>
+  
+  <rect x="380" y="380" width="180" height="48" rx="24" fill="#238636" opacity="0.2"/>
+  <text x="470" y="410" font-family="monospace" font-size="16" fill="#3fb950" text-anchor="middle">shadowscan</text>
+  
+  <rect x="580" y="380" width="180" height="48" rx="24" fill="#da3633" opacity="0.2"/>
+  <text x="670" y="410" font-family="monospace" font-size="16" fill="#f85149" text-anchor="middle">hashsleuth</text>
+  
+  <rect x="780" y="380" width="180" height="48" rx="24" fill="#8957e5" opacity="0.2"/>
+  <text x="870" y="410" font-family="monospace" font-size="16" fill="#bc8cff" text-anchor="middle">packeteye</text>
+  
+  <text x="640" y="480" font-family="monospace" font-size="20" fill="#484f58" text-anchor="middle">crates.io · Docker GHCR · OpenSSF Scorecard</text>
+  
+  <rect x="280" y="520" width="720" height="2" fill="url(#accent)" opacity="0.5"/>
+  <text x="640" y="560" font-family="system-ui, sans-serif" font-size="18" fill="#484f58" text-anchor="middle">github.com/BartoszOsiej/cybersec-tools</text>
+</svg>
