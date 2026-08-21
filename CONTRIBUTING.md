@@ -1,28 +1,53 @@
-# Contributing
+# Contributing to Cybersec Tools
 
-Dziekuje za zainteresowanie projektem!
+Thanks for your interest in improving these security tools!
 
-## Setup
+## Quick Start
 
-1. Wymagany Rust nightly (build eBPF) lub toolchain z sekcji CI.
-2. Sklonuj repo, zainstaluj zaleznosci, uruchom testy:
-   - `cargo fmt --check`
-   - `cargo clippy -- -D warnings`
-   - `cargo test`
+```bash
+git clone https://github.com/BartoszOsiej/cybersec-tools.git
+cd cybersec-tools
+cargo build --release
+cargo test
+```
 
-## Zglaszanie problemow
+## Ways to Contribute
 
-Zanim powstanie issue, sprawdz czy nie istnieje juz na liscie. Opisz:
+### 🐛 Bug Reports
+Open an issue with:
+- Tool name and version
+- Steps to reproduce
+- Expected vs actual behavior
+- OS and Rust version
 
-- czego oczekiwales,
-- co dostales (logi, stack trace),
-- wersje systemu/toolchainu.
+### 🔍 New Detection Rules
+Each tool accepts community-contributed rules:
+- **shadowscan** — new header checks, vulnerability patterns
+- **hashsleuth** — new hash type signatures
+- **netrecon** — new service fingerprints
+- **packeteye** — new protocol dissectors
 
-## Pull requesty
+### ✨ New Features
+1. Fork the repo
+2. Create a branch: `git checkout -b feat/my-feature`
+3. Add tests in each tool's `tests/` directory
+4. Run: `cargo test --workspace`
+5. Open a PR
 
-- Pisz male, zawarte zmiany (1 temat = 1 PR).
-- Utrzymuj zielony CI (fmt + clippy + testy).
-- Dodaj testy dla nowych zachowan.
-- Opisuj "dlaczego", nie tylko "co".
+## Code Style
 
-Licencja projektu: MIT. Wysylajac PR akceptujesz ja dla swojej zmiany.
+- **Rust 2021 edition**
+- **Tokio** for async code
+- **Clippy clean** — `cargo clippy --workspace -- -D warnings`
+- **Formatted** — `cargo fmt --all`
+
+## Security
+
+These are security tools. Never:
+- Add exploit code for real vulnerabilities
+- Include credentials or API keys
+- Scan systems without authorization
+
+## License
+
+MIT
