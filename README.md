@@ -2,6 +2,7 @@
 
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![Rust](https://img.shields.io/badge/Rust-2021-DEA584?style=flat-square&logo=rust)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/BartoszOsiej/cybersec-tools/badge)](https://securityscorecards.dev/viewer/?uri=github.com/BartoszOsiej/cybersec-tools)
 ![crates.io](https://img.shields.io/crates/v/netrecon?style=flat-square&label=netrecon&logo=rust)
 ![crates.io](https://img.shields.io/crates/v/shadowscan?style=flat-square&label=shadowscan&logo=rust)
 ![crates.io](https://img.shields.io/crates/v/hashsleuth?style=flat-square&label=hashsleuth&logo=rust)
