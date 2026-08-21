@@ -71,6 +71,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install system deps
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libpcap-dev
+
       - name: Build workspace
         run: cargo build --release
 
