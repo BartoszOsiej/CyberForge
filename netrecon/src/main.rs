@@ -106,7 +106,9 @@ fn parse_cidr(s: &str) -> Result<Vec<IpAddr>, String> {
             return Ok(resolved);
         }
     };
-    let ip: IpAddr = ip_str.parse().map_err(|_| format!("invalid IP: {ip_str}"))?;
+    let ip: IpAddr = ip_str
+        .parse()
+        .map_err(|_| format!("invalid IP: {ip_str}"))?;
     let prefix: u8 = prefix_str
         .parse()
         .map_err(|_| format!("invalid prefix: {prefix_str}"))?;
@@ -139,7 +141,9 @@ fn parse_cidr(s: &str) -> Result<Vec<IpAddr>, String> {
 }
 
 fn expand_targets(args: &[String]) -> Result<Vec<(IpAddr, u16)>, String> {
-    let host_arg = args.first().ok_or("usage: netrecon <target> [ports] [options]")?;
+    let host_arg = args
+        .first()
+        .ok_or("usage: netrecon <target> [ports] [options]")?;
     let port_arg = args.get(1).map(|s| s.as_str()).unwrap_or("1-1024");
     let addrs = parse_cidr(host_arg)?;
     let ports = parse_ports(port_arg)?;
@@ -180,7 +184,7 @@ fn parse_ports(s: &str) -> Result<Vec<u16>, String> {
 
 fn probe(addr: IpAddr, port: u16, timeout: Duration) -> Option<Found> {
     let sock_addr = SocketAddr::new(addr, port);
-        let stream = match TcpStream::connect_timeout(&sock_addr, timeout) {
+    let stream = match TcpStream::connect_timeout(&sock_addr, timeout) {
         Ok(s) => s,
         Err(_) => return None,
     };
@@ -196,7 +200,9 @@ fn probe(addr: IpAddr, port: u16, timeout: Duration) -> Option<Found> {
     let _ = sock.write_all(b"\r\n");
     match sock.read(&mut buf) {
         Ok(n) if n > 0 => {
-            let text = String::from_utf8_lossy(&buf[..n.min(200)]).trim().to_string();
+            let text = String::from_utf8_lossy(&buf[..n.min(200)])
+                .trim()
+                .to_string();
             if !text.is_empty() {
                 banner = Some(text);
             }
@@ -284,21 +290,19 @@ fn main() {
         let counter = counter.clone();
         let results = results.clone();
         let total = total.clone();
-        handles.push(thread::spawn(move || {
-            loop {
-                let next = {
-                    let mut q = queue.lock().unwrap();
-                    q.pop_front()
-                };
-                let (addr, port) = match next {
-                    Some(x) => x,
-                    None => break,
-                };
-                counter.fetch_add(1, Ordering::Relaxed);
-                if let Some(found) = probe(addr, port, timeout) {
-                    total.fetch_add(1, Ordering::Relaxed);
-                    results.lock().unwrap().push(found);
-                }
+        handles.push(thread::spawn(move || loop {
+            let next = {
+                let mut q = queue.lock().unwrap();
+                q.pop_front()
+            };
+            let (addr, port) = match next {
+                Some(x) => x,
+                None => break,
+            };
+            counter.fetch_add(1, Ordering::Relaxed);
+            if let Some(found) = probe(addr, port, timeout) {
+                total.fetch_add(1, Ordering::Relaxed);
+                results.lock().unwrap().push(found);
             }
         }));
     }
@@ -333,7 +337,11 @@ fn main() {
             );
         }
     }
-    println!("[*] done: {} probes, {} open", counter.load(Ordering::Relaxed), found.len());
+    println!(
+        "[*] done: {} probes, {} open",
+        counter.load(Ordering::Relaxed),
+        found.len()
+    );
 }
 
 #[cfg(test)]

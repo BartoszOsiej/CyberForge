@@ -15,13 +15,28 @@ const VERSION: &str = "1.0.0";
 
 // Security headers worth checking.
 const SECURITY_HEADERS: &[(&str, &str)] = &[
-    ("strict-transport-security", "Missing HSTS (HTTP Strict Transport Security)"),
-    ("content-security-policy", "Missing CSP (Content-Security-Policy)"),
-    ("x-frame-options", "Missing X-Frame-Options (clickjacking protection)"),
-    ("x-content-type-options", "Missing X-Content-Type-Options: nosniff"),
+    (
+        "strict-transport-security",
+        "Missing HSTS (HTTP Strict Transport Security)",
+    ),
+    (
+        "content-security-policy",
+        "Missing CSP (Content-Security-Policy)",
+    ),
+    (
+        "x-frame-options",
+        "Missing X-Frame-Options (clickjacking protection)",
+    ),
+    (
+        "x-content-type-options",
+        "Missing X-Content-Type-Options: nosniff",
+    ),
     ("referrer-policy", "Missing Referrer-Policy"),
     ("permissions-policy", "Missing Permissions-Policy"),
-    ("cross-origin-opener-policy", "Missing COOP (Cross-Origin-Opener-Policy)"),
+    (
+        "cross-origin-opener-policy",
+        "Missing COOP (Cross-Origin-Opener-Policy)",
+    ),
     ("x-xss-protection", "Missing X-XSS-Protection"),
 ];
 
@@ -101,12 +116,8 @@ fn check_headers(agent: &Agent, base: &str, findings: &mut Vec<String>) {
                     findings.push(format!("[header] {msg}"));
                 }
             }
-            let server = resp
-                .header("server")
-                .unwrap_or("?");
-            let powered = resp
-                .header("x-powered-by")
-                .unwrap_or("none");
+            let server = resp.header("server").unwrap_or("?");
+            let powered = resp.header("x-powered-by").unwrap_or("none");
             findings.push(format!(
                 "[header] server={server}, x-powered-by={powered} (present {found}/{} security headers)",
                 SECURITY_HEADERS.len()
@@ -131,7 +142,9 @@ fn check_tls(base: &str, findings: &mut Vec<String>) {
         .next()
         .unwrap_or("");
     let (host, port) = match hostport.rsplit_once(':') {
-        Some((h, p)) if p.chars().all(|c| c.is_ascii_digit()) => (h, p.parse::<u16>().unwrap_or(443)),
+        Some((h, p)) if p.chars().all(|c| c.is_ascii_digit()) => {
+            (h, p.parse::<u16>().unwrap_or(443))
+        }
         _ => (hostport, 443),
     };
     let builder = match openssl::ssl::SslConnector::builder(openssl::ssl::SslMethod::tls_client()) {
@@ -337,8 +350,14 @@ mod tests {
     fn normalize_target_adds_scheme_and_strips_slash() {
         assert_eq!(normalize_target("example.com"), "http://example.com");
         assert_eq!(normalize_target("  example.com/  "), "http://example.com");
-        assert_eq!(normalize_target("https://example.com"), "https://example.com");
-        assert_eq!(normalize_target("https://example.com///"), "https://example.com");
+        assert_eq!(
+            normalize_target("https://example.com"),
+            "https://example.com"
+        );
+        assert_eq!(
+            normalize_target("https://example.com///"),
+            "https://example.com"
+        );
     }
 
     #[test]
@@ -355,20 +374,32 @@ mod tests {
             normalize_target("example.com:8080/path?q=1&r=2"),
             "http://example.com:8080/path?q=1&r=2"
         );
-        assert_eq!(normalize_target("https://example.com:8443/"), "https://example.com:8443");
+        assert_eq!(
+            normalize_target("https://example.com:8443/"),
+            "https://example.com:8443"
+        );
     }
 
     #[test]
     fn normalize_target_trims_whitespace_and_slashes() {
         assert_eq!(normalize_target("  example.com///  "), "http://example.com");
-        assert_eq!(normalize_target("http://example.com////"), "http://example.com");
+        assert_eq!(
+            normalize_target("http://example.com////"),
+            "http://example.com"
+        );
     }
 
     #[test]
     fn normalize_target_preserves_explicit_schemes() {
-        assert_eq!(normalize_target("https://secure.example"), "https://secure.example");
+        assert_eq!(
+            normalize_target("https://secure.example"),
+            "https://secure.example"
+        );
         // Only lowercase schemes are recognised — uppercase is treated as a
         // bare host and gets a scheme prepended.
-        assert_eq!(normalize_target("HTTP://upper.example"), "http://HTTP://upper.example");
+        assert_eq!(
+            normalize_target("HTTP://upper.example"),
+            "http://HTTP://upper.example"
+        );
     }
 }

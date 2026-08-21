@@ -147,9 +147,7 @@ fn dict_mode(target: &str, wordlist: &str, algo: &str) {
         let algo = algo.to_string();
         let candidate = candidate.to_string();
         handles.push(thread::spawn(move || {
-            if !found.load(Ordering::Relaxed)
-                && hash_with(&algo, candidate.as_bytes()) == target
-            {
+            if !found.load(Ordering::Relaxed) && hash_with(&algo, candidate.as_bytes()) == target {
                 println!("[+] FOUND: {candidate}");
                 found.store(true, Ordering::Relaxed);
             }
@@ -163,7 +161,10 @@ fn dict_mode(target: &str, wordlist: &str, algo: &str) {
         let _ = h.join();
     }
     if !found.load(Ordering::Relaxed) {
-        println!("[-] not found in {seen} words ({:.2}s)", start.elapsed().as_secs_f32());
+        println!(
+            "[-] not found in {seen} words ({:.2}s)",
+            start.elapsed().as_secs_f32()
+        );
     } else {
         println!("[*] cracked in {:.2}s", start.elapsed().as_secs_f32());
     }
@@ -232,7 +233,10 @@ fn brute_mode(target: &str, charset: &str, max_len: usize, algo: &str) {
         let _ = h.join();
     }
     if !found.load(Ordering::Relaxed) {
-        println!("[-] not cracked within maxlen={max_len} ({:.2}s)", start.elapsed().as_secs_f32());
+        println!(
+            "[-] not cracked within maxlen={max_len} ({:.2}s)",
+            start.elapsed().as_secs_f32()
+        );
     } else {
         println!("[*] cracked in {:.2}s", start.elapsed().as_secs_f32());
     }
@@ -261,8 +265,12 @@ fn main() {
             }
         }
         "dict" => {
-            let hash = args.get(1).expect("usage: hashsleuth dict <hash> <wordlist>");
-            let wordlist = args.get(2).expect("usage: hashsleuth dict <hash> <wordlist>");
+            let hash = args
+                .get(1)
+                .expect("usage: hashsleuth dict <hash> <wordlist>");
+            let wordlist = args
+                .get(2)
+                .expect("usage: hashsleuth dict <hash> <wordlist>");
             let mut algo = String::new();
             let mut i = 3;
             while i < args.len() {
@@ -282,16 +290,26 @@ fn main() {
                 } else if hash.len() == 64 {
                     "sha256".into()
                 } else {
-                    eprintln!("cannot auto-detect algo for len {}; pass --algo", hash.len());
+                    eprintln!(
+                        "cannot auto-detect algo for len {}; pass --algo",
+                        hash.len()
+                    );
                     std::process::exit(1);
                 };
-                println!("[*] auto-detected algo: {algo} (from {})", guesses.first().unwrap_or(&"?".to_string()));
+                println!(
+                    "[*] auto-detected algo: {algo} (from {})",
+                    guesses.first().unwrap_or(&"?".to_string())
+                );
             }
             dict_mode(hash, wordlist, &algo);
         }
         "brute" => {
-            let hash = args.get(1).expect("usage: hashsleuth brute <hash> <charset> <maxlen>");
-            let charset = args.get(2).expect("usage: hashsleuth brute <hash> <charset> <maxlen>");
+            let hash = args
+                .get(1)
+                .expect("usage: hashsleuth brute <hash> <charset> <maxlen>");
+            let charset = args
+                .get(2)
+                .expect("usage: hashsleuth brute <hash> <charset> <maxlen>");
             let maxlen: usize = args
                 .get(3)
                 .and_then(|v| v.parse().ok())
@@ -356,15 +374,15 @@ mod tests {
     fn digest_helpers_match_known_vectors() {
         assert_eq!(md5_hex(b""), "d41d8cd98f00b204e9800998ecf8427e");
         assert_eq!(md5_hex(b"hello"), "5d41402abc4b2a76b9719d911017c592");
-        assert_eq!(
-            sha1_hex(b"abc"),
-            "a9993e364706816aba3e25717850c26c9cd0d89d"
-        );
+        assert_eq!(sha1_hex(b"abc"), "a9993e364706816aba3e25717850c26c9cd0d89d");
         assert_eq!(
             sha256_hex(b"abc"),
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
-        assert_eq!(hash_with("md5", b"hello"), "5d41402abc4b2a76b9719d911017c592");
+        assert_eq!(
+            hash_with("md5", b"hello"),
+            "5d41402abc4b2a76b9719d911017c592"
+        );
     }
 
     #[test]
@@ -382,12 +400,23 @@ mod tests {
 
     #[test]
     fn identify_crypt_and_django_prefixes() {
-        let sha256_crypt = identify("$5$rounds=535000$wBcWwLeRbvNMf8hS$ylXEmvNHYJNgbYvSX4uqhO3kUo1pX9vN2");
-        assert!(sha256_crypt.iter().any(|s| s.contains("sha256-crypt")), "{sha256_crypt:?}");
-        let sha512_crypt = identify("$6$rounds=656000$hQdFQj6Gz0nQk1rQ$vQFZPk0lM4q5wJ2tV7sNqB1uD3fH8yW2");
-        assert!(sha512_crypt.iter().any(|s| s.contains("sha512-crypt")), "{sha512_crypt:?}");
+        let sha256_crypt =
+            identify("$5$rounds=535000$wBcWwLeRbvNMf8hS$ylXEmvNHYJNgbYvSX4uqhO3kUo1pX9vN2");
+        assert!(
+            sha256_crypt.iter().any(|s| s.contains("sha256-crypt")),
+            "{sha256_crypt:?}"
+        );
+        let sha512_crypt =
+            identify("$6$rounds=656000$hQdFQj6Gz0nQk1rQ$vQFZPk0lM4q5wJ2tV7sNqB1uD3fH8yW2");
+        assert!(
+            sha512_crypt.iter().any(|s| s.contains("sha512-crypt")),
+            "{sha512_crypt:?}"
+        );
         let md5_crypt = identify("$1$salt$hashstring");
-        assert!(md5_crypt.iter().any(|s| s.contains("md5-crypt")), "{md5_crypt:?}");
+        assert!(
+            md5_crypt.iter().any(|s| s.contains("md5-crypt")),
+            "{md5_crypt:?}"
+        );
         let ldap = identify("{SHA1}base64encodeddigest");
         assert!(ldap.iter().any(|s| s.contains("LDAP")), "{ldap:?}");
         let django = identify("pbkdf2:sha256:100000$salt$hash");
@@ -397,8 +426,12 @@ mod tests {
     #[test]
     fn phpass_uppercase_markers_are_recognized() {
         // WordPress ($P$) and Drupal ($H$) markers must both match.
-        assert!(identify("$P$B5EhV6fL9pVlT7q8zYyGxJ3m2rWvU0k1").iter().any(|s| s.contains("phpass")));
-        assert!(identify("$H$B5EhV6fL9pVlT7q8zYyGxJ3m2rWvU0k1").iter().any(|s| s.contains("phpass")));
+        assert!(identify("$P$B5EhV6fL9pVlT7q8zYyGxJ3m2rWvU0k1")
+            .iter()
+            .any(|s| s.contains("phpass")));
+        assert!(identify("$H$B5EhV6fL9pVlT7q8zYyGxJ3m2rWvU0k1")
+            .iter()
+            .any(|s| s.contains("phpass")));
     }
 
     #[test]

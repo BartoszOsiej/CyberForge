@@ -43,8 +43,8 @@ fn analyze_packet(data: &[u8], summary: &mut Summary) {
     }
     let ethertype = u16::from_be_bytes([data[12], data[13]]);
     let ip_start = match ethertype {
-        0x0800 => 14,       // IPv4
-        0x86dd => return,   // IPv6: skip detailed parse
+        0x0800 => 14,     // IPv4
+        0x86dd => return, // IPv6: skip detailed parse
         _ => return,
     };
 
@@ -56,8 +56,18 @@ fn analyze_packet(data: &[u8], summary: &mut Summary) {
     if ihl < 20 || data.len() < ip_start + ihl {
         return;
     }
-    let src = Ipv4Addr::new(data[ip_start + 12], data[ip_start + 13], data[ip_start + 14], data[ip_start + 15]);
-    let dst = Ipv4Addr::new(data[ip_start + 16], data[ip_start + 17], data[ip_start + 18], data[ip_start + 19]);
+    let src = Ipv4Addr::new(
+        data[ip_start + 12],
+        data[ip_start + 13],
+        data[ip_start + 14],
+        data[ip_start + 15],
+    );
+    let dst = Ipv4Addr::new(
+        data[ip_start + 16],
+        data[ip_start + 17],
+        data[ip_start + 18],
+        data[ip_start + 19],
+    );
     let protocol = data[ip_start + 9];
 
     *summary.per_ip.entry(src).or_insert(0) += 1;
@@ -103,9 +113,15 @@ fn print_report(summary: &Summary, label: &str) {
     println!("packets: {} | bytes: {}", summary.total, summary.bytes);
     println!(
         "protocols: tcp={} udp={} icmp={} other={}",
-        summary.protocols.tcp, summary.protocols.udp, summary.protocols.icmp, summary.protocols.other
+        summary.protocols.tcp,
+        summary.protocols.udp,
+        summary.protocols.icmp,
+        summary.protocols.other
     );
-    println!("tcp handshakes: syn={} synack={}", summary.tcp_syn, summary.tcp_synack);
+    println!(
+        "tcp handshakes: syn={} synack={}",
+        summary.tcp_syn, summary.tcp_synack
+    );
 
     let mut ips: Vec<(&Ipv4Addr, &u64)> = summary.per_ip.iter().collect();
     ips.sort_by(|a, b| b.1.cmp(a.1));
@@ -203,26 +219,26 @@ mod tests {
     /// Build a minimal Ethernet + IPv4 + TCP SYN frame.
     fn tcp_syn_frame() -> Vec<u8> {
         let mut pkt = Vec::new();
-        pkt.extend_from_slice(&[0u8; 6]);      // dst MAC
-        pkt.extend_from_slice(&[0u8; 6]);      // src MAC
-        pkt.extend_from_slice(&[0x08, 0x00]);  // EtherType IPv4
-        // IPv4 header (20 bytes, IHL=5, protocol=6 TCP).
-        pkt.push(0x45);                        // version + IHL
-        pkt.push(0x00);                        // DSCP/ECN
-        pkt.extend_from_slice(&[0x00, 0x2c]);  // total length
+        pkt.extend_from_slice(&[0u8; 6]); // dst MAC
+        pkt.extend_from_slice(&[0u8; 6]); // src MAC
+        pkt.extend_from_slice(&[0x08, 0x00]); // EtherType IPv4
+                                              // IPv4 header (20 bytes, IHL=5, protocol=6 TCP).
+        pkt.push(0x45); // version + IHL
+        pkt.push(0x00); // DSCP/ECN
+        pkt.extend_from_slice(&[0x00, 0x2c]); // total length
         pkt.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // id/flags/frag
-        pkt.push(64);                          // TTL
-        pkt.push(6);                           // protocol: TCP
-        pkt.extend_from_slice(&[0x00, 0x00]);  // checksum (ignored)
+        pkt.push(64); // TTL
+        pkt.push(6); // protocol: TCP
+        pkt.extend_from_slice(&[0x00, 0x00]); // checksum (ignored)
         pkt.extend_from_slice(&[10, 0, 0, 1]); // src IP
         pkt.extend_from_slice(&[10, 0, 0, 2]); // dst IP
-        // TCP header (20 bytes), SYN flag set.
-        pkt.extend_from_slice(&[0x30, 0x39]);  // sport 12345
-        pkt.extend_from_slice(&[0x00, 0x50]);  // dport 80
-        pkt.extend_from_slice(&[0u8; 4]);      // seq
-        pkt.extend_from_slice(&[0u8; 4]);      // ack
-        pkt.push(0x50);                        // data offset 5
-        pkt.push(0x02);                        // flags: SYN
+                                               // TCP header (20 bytes), SYN flag set.
+        pkt.extend_from_slice(&[0x30, 0x39]); // sport 12345
+        pkt.extend_from_slice(&[0x00, 0x50]); // dport 80
+        pkt.extend_from_slice(&[0u8; 4]); // seq
+        pkt.extend_from_slice(&[0u8; 4]); // ack
+        pkt.push(0x50); // data offset 5
+        pkt.push(0x02); // flags: SYN
         pkt.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); // window/checksum/urg
         pkt
     }
@@ -283,7 +299,7 @@ mod tests {
     fn udp_is_counted_with_ports() {
         let mut pkt = tcp_syn_frame();
         pkt[14 + 9] = 17; // protocol -> UDP
-        // Replace the TCP header with an 8-byte UDP header: sport 12345, dport 53.
+                          // Replace the TCP header with an 8-byte UDP header: sport 12345, dport 53.
         pkt[14 + 20] = 0x30;
         pkt[14 + 21] = 0x39;
         pkt[14 + 22] = 0x00;
