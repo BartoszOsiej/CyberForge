@@ -1,0 +1,61 @@
+name: vhs-demos
+
+# Renders animated terminal demos (SVG) from .github/vhs/*.tape and commits
+# them to assets/ so READMEs embed living, reproducible sessions.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/vhs/**", "netrecon/**", "hashsleuth/**"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vhs
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BOT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install system deps + build tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libpcap-dev
+          cargo build --release
+          sudo cp target/release/{netrecon,hashsleuth} /usr/local/bin/
+
+      - name: Verify demo commands are deterministic-safe
+        run: |
+          hashsleuth identify 5f4dcc3b5aa765d61d8327deb882cf99
+          netrecon --help >/dev/null
+
+      - uses: charmbracelet/vhs-action@v2
+        with:
+          path: .github/vhs/hashsleuth.tape
+
+      - uses: charmbracelet/vhs-action@v2
+        with:
+          path: .github/vhs/netrecon.tape
+
+      - name: Commit rendered demos
+        run: |
+          git config user.name "vhs-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "demo: refresh terminal recordings"
+            git push
+          fi
