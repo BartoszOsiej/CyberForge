@@ -39,7 +39,7 @@ jobs:
         run: |
           FILES="sbom.spdx.json"
           if [ -n "$BUNDLE" ] && [ -f "$BUNDLE" ]; then FILES="$FILES $BUNDLE"; fi
-          gh release upload "${{ github.ref_name }}" $FILES --clobber
+          gh release upload "${{ github.ref_name }}" "$FILES" --clobber
       - name: Attach artifacts
         uses: softprops/action-gh-release@v2
         with:

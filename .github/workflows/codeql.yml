@@ -19,12 +19,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["python"]
+        languages: ["rust"]
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: github/codeql-action/init@v3
-        with: { language: "${{ matrix.language }}" }
+        with: { languages: "${{ matrix.language }}" }
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
