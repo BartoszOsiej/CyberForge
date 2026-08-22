@@ -86,21 +86,21 @@ fn identify(hash: &str) -> Vec<String> {
 
 fn md5_hex(data: &[u8]) -> String {
     let digest = md5::compute(data);
-    format!("{digest:x}")
+    digest.iter().map(|b| format!("{b:02x}")).collect::<String>()
 }
 
 fn sha1_hex(data: &[u8]) -> String {
     use sha1::{Digest, Sha1};
     let mut hasher = Sha1::new();
     hasher.update(data);
-    format!("{:x}", hasher.finalize())
+    hasher.finalize().iter().map(|b| format!("{b:02x}")).collect::<String>()
 }
 
 fn sha256_hex(data: &[u8]) -> String {
     use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
     hasher.update(data);
-    format!("{:x}", hasher.finalize())
+    hasher.finalize().iter().map(|b| format!("{b:02x}")).collect::<String>()
 }
 
 /// Which algorithms to try for a given target.
