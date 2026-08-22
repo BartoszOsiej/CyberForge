@@ -22,6 +22,8 @@ jobs:
         language: ["python"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: github/codeql-action/init@v3
         with: { language: "${{ matrix.language }}" }
       - uses: github/codeql-action/autobuild@v3
