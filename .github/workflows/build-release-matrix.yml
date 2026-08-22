@@ -34,7 +34,9 @@ jobs:
             target: x86_64-pc-windows-msvc
             ext: ".exe"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
       - name: Build (netrecon + hashsleuth)
