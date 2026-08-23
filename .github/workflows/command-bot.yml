@@ -104,12 +104,13 @@ jobs:
           ARGS: ${{ steps.cmd.outputs.args }}
           NUMBER: ${{ github.event.issue.number }}
           ACTOR: ${{ github.event.comment.user.login }}
+          REPO: ${{ github.repository }}
         run: |
           if [[ "$CODE" == "0" ]]; then
-            gh api repos/${{ github.repository }}/issues/$NUMBER/reactions -f content="+1" >/dev/null
+            gh api "repos/${REPO}/issues/${NUMBER}/reactions" -f content="+1" >/dev/null
             VERDICT="✅ **exit 0**"
           else
-            gh api repos/${{ github.repository }}/issues/$NUMBER/reactions -f content="-1" >/dev/null
+            gh api "repos/${REPO}/issues/${NUMBER}/reactions" -f content="-1" >/dev/null
             VERDICT="❌ **exit $CODE**"
           fi
 
