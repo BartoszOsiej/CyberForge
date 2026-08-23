@@ -51,7 +51,7 @@ jobs:
           cp "target/${{ matrix.target }}/release/hashsleuth${{ matrix.ext }}" "stage/hashsleuth-${{ matrix.target }}${{ matrix.ext }}"
       - name: Generate build provenance (SLSA v1 attestation)
         id: attest
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@92c65d2898f1f53cfdc910b962cecff86e7f8fcc
         with:
           subject-path: |
             stage/netrecon-${{ matrix.target }}${{ matrix.ext }}
