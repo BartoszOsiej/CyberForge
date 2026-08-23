@@ -86,6 +86,7 @@ jobs:
           ARGS: ${{ steps.cmd.outputs.args }}
         run: |
           set +e
+          # shellcheck disable=SC2086
           OUT=$(timeout 60 "./target/release/$TOOL" $ARGS 2>&1)
           CODE=$?
           {
@@ -106,6 +107,7 @@ jobs:
           ACTOR: ${{ github.event.comment.user.login }}
           REPO: ${{ github.repository }}
         run: |
+          # shellcheck disable=SC2086
           if [[ "$CODE" == "0" ]]; then
             gh api "repos/${REPO}/issues/${NUMBER}/reactions" -f content="+1" >/dev/null
             VERDICT="✅ **exit 0**"
@@ -126,4 +128,4 @@ jobs:
             echo ""
             echo "<sub>built from \`${GITHUB_SHA::7}\` · executed in an isolated GitHub Actions runner · 60 s timeout</sub>"
           } > body.md
-          gh issue comment $NUMBER --body-file body.md
+          gh issue comment "${NUMBER}" --body-file body.md
