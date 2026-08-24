@@ -1,5 +1,8 @@
 # ── Stage 1: Build ──
-FROM rust:1.87-bookworm AS builder
+FROM rust:1.88-bookworm AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpcap-dev libssl-dev pkg-config && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY . .
 RUN cargo build --release --workspace
@@ -7,7 +10,7 @@ RUN cargo build --release --workspace
 # ── Stage 2: Runtime ──
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libssl3 ca-certificates && \
+    libpcap0.8 libssl3 ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder /src/target/release/netrecon /usr/local/bin/
 COPY --from=builder /src/target/release/packeteye /usr/local/bin/
