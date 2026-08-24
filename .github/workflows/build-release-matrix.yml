@@ -30,6 +30,9 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             ext: ".exe"
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
