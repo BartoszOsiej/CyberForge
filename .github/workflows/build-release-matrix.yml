@@ -33,7 +33,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -50,19 +49,9 @@ jobs:
           mkdir -p stage
           cp "target/${{ matrix.target }}/release/netrecon${{ matrix.ext }}" "stage/netrecon-${{ matrix.target }}${{ matrix.ext }}"
           cp "target/${{ matrix.target }}/release/hashsleuth${{ matrix.ext }}" "stage/hashsleuth-${{ matrix.target }}${{ matrix.ext }}"
-      - name: Generate build provenance (SLSA v1 attestation)
-        id: attest
-        uses: actions/attest-build-provenance@92c65d2898f1f53cfdc910b962cecff86e7f8fcc
-        with:
-          subject-path: |
-            stage/netrecon-${{ matrix.target }}${{ matrix.ext }}
-            stage/hashsleuth-${{ matrix.target }}${{ matrix.ext }}
       - name: Attach to release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
         run: |
-          FILES=$(ls stage/)
-          if [ -n "$BUNDLE" ] && [ -f "$BUNDLE" ]; then FILES="$FILES $BUNDLE"; fi
-          gh release upload "${{ github.ref_name }}" $FILES --clobber
+          gh release upload "${{ github.ref_name }}" stage/* --clobber
