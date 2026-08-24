@@ -24,6 +24,7 @@ reconnaissance, web scanning, hash analysis, and packet inspection.**
 
 ## Table of Contents
 
+- [Demo](#-demo)
 - [Tools](#tools)
 - [Quick Start](#quick-start)
 - [Tool Details](#tool-details)
@@ -33,6 +34,18 @@ reconnaissance, web scanning, hash analysis, and packet inspection.**
 - [License](#license)
 
 ---
+
+## 📺 Demo
+
+
+
+<!-- VHS auto-rendered — run: vhs demos/cybersec.tape -->
+
+
+
+![Cybersec Tools Demo](assets/cybersec-demo.gif)
+
+
 
 ## Tools
 
