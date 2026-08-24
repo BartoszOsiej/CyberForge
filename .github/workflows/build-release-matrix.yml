@@ -63,6 +63,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BUNDLE: ${{ steps.attest.outputs.bundle-path }}
         run: |
-          FILES="stage/*"
+          FILES=$(ls stage/)
           if [ -n "$BUNDLE" ] && [ -f "$BUNDLE" ]; then FILES="$FILES $BUNDLE"; fi
-          gh release upload "${{ github.ref_name }}" "$FILES" --clobber
+          gh release upload "${{ github.ref_name }}" $FILES --clobber
