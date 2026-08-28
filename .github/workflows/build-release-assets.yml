@@ -44,9 +44,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BUNDLE: ${{ steps.attest.outputs.bundle-path }}
         run: |
-          FILES="sbom.spdx.json"
-          if [ -n "$BUNDLE" ] && [ -f "$BUNDLE" ]; then FILES="$FILES $BUNDLE"; fi
-          gh release upload "${{ github.ref_name }}" $FILES --clobber
+          FILES=(sbom.spdx.json)
+          if [ -n "$BUNDLE" ] && [ -f "$BUNDLE" ]; then FILES+=("$BUNDLE"); fi
+          gh release upload "${{ github.ref_name }}" "${FILES[@]}" --clobber
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
