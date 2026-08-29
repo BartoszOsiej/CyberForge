@@ -9,7 +9,7 @@
 use std::env;
 use std::time::Duration;
 
-use ureq::{Agent, AgentBuilder};
+use ureq::Agent;
 
 const VERSION: &str = "1.0.0";
 
@@ -107,23 +107,26 @@ fn normalize_target(raw: &str) -> String {
 fn check_headers(agent: &Agent, base: &str, findings: &mut Vec<String>) {
     match agent.get(base).call() {
         Ok(resp) => {
-            let headers = resp.headers_names();
             let mut found = 0usize;
             for (hdr, msg) in SECURITY_HEADERS {
-                if headers.iter().any(|h| h.eq_ignore_ascii_case(hdr)) {
+                if resp.headers().iter().any(|(k, _)| k.as_str().eq_ignore_ascii_case(hdr)) {
                     found += 1;
                 } else {
                     findings.push(format!("[header] {msg}"));
                 }
             }
-            let server = resp.header("server").unwrap_or("?");
-            let powered = resp.header("x-powered-by").unwrap_or("none");
+            let server = resp.headers().get("server")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("?");
+            let powered = resp.headers().get("x-powered-by")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("none");
             findings.push(format!(
                 "[header] server={server}, x-powered-by={powered} (present {found}/{} security headers)",
                 SECURITY_HEADERS.len()
             ));
         }
-        Err(ureq::Error::Status(code, _)) => {
+        Err(ureq::Error::StatusCode(code)) => {
             findings.push(format!("[header] HTTP {code} on GET {base}"));
         }
         Err(e) => {
@@ -198,8 +201,8 @@ fn reflect_probe(
     };
     let url = format!("{base}/?{param}={encoded}");
     match agent.get(&url).call() {
-        Ok(resp) => {
-            let body = resp.into_string().unwrap_or_default();
+        Ok(mut resp) => {
+            let body = resp.body_mut().read_to_string().unwrap_or_default();
             if body.contains(payload) {
                 return Some(url);
             }
@@ -242,8 +245,8 @@ fn check_injection(agent: &Agent, base: &str, findings: &mut Vec<String>) {
     let mut sqli_hits = 0;
     for payload in SQLI_PAYLOADS {
         let url = format!("{base}/?id={}", payload.replace(' ', "%20"));
-        if let Ok(resp) = agent.get(&url).call() {
-            let body = resp.into_string().unwrap_or_default();
+        if let Ok(mut resp) = agent.get(&url).call() {
+            let body = resp.body_mut().read_to_string().unwrap_or_default();
             if error_patterns.iter().any(|p| body.contains(p)) {
                 sqli_hits += 1;
                 findings.push(format!("[sqli] possible SQLi (error signature): {url}"));
@@ -261,16 +264,21 @@ fn path_discovery(agent: &Agent, base: &str, findings: &mut Vec<String>) {
     for path in COMMON_PATHS {
         let url = format!("{base}{path}");
         match agent.get(&url).call() {
-            Ok(resp) => {
-                let status = resp.status();
+            Ok(mut resp) => {
+                let status = resp.status().as_u16();
                 let size = resp
-                    .header("content-length")
-                    .map(|v| v.to_string().to_string())
-                    .unwrap_or_else(|| resp.into_string().unwrap_or_default().len().to_string());
+                    .headers()
+                    .get("content-length")
+                    .and_then(|v| v.to_str().ok())
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| {
+                        let body = resp.body_mut().read_to_string().unwrap_or_default();
+                        body.len().to_string()
+                    });
                 findings.push(format!("[path] {status} {path} (size {size})"));
                 hits += 1;
             }
-            Err(ureq::Error::Status(status, _)) => {
+            Err(ureq::Error::StatusCode(status)) => {
                 if status == 401 || status == 403 || status == 500 {
                     findings.push(format!("[path] {status} {path} (exists, protected)"));
                     hits += 1;
@@ -319,10 +327,11 @@ fn main() {
     println!("[*] ShadowScan {VERSION} | target: {base}");
     println!("[*] timeout: {timeout}s\n");
 
-    let agent: Agent = AgentBuilder::new()
-        .timeout(Duration::from_secs(timeout))
-        .user_agent(&format!("ShadowScan/{VERSION}"))
-        .build();
+    let agent: Agent = Agent::config_builder()
+        .timeout_global(Some(Duration::from_secs(timeout)))
+        .user_agent(format!("ShadowScan/{VERSION}"))
+        .build()
+        .into();
 
     let mut findings: Vec<String> = Vec::new();
 
