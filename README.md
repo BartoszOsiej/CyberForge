@@ -1,14 +1,14 @@
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=130&section=header&text=CyberForge&fontSize=32&animation=fadeIn" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=130&section=header&text=cybersec-tools&fontSize=32&animation=fadeIn" width="100%" />
 
 <div align="center">
 
-[![Typing SVG](https://readme-typing-svg.demolab.com/?font=JetBrains+Mono&weight=600&size=18&duration=3000&pause=1200&color=58A6FF&center=true&vCenter=true&width=600&height=45&lines=4%20Rust%20security%20tools%20%E2%80%94%20port%20scanner%2C%20web%20scanner%2C%20hash%20cracker%2C%20packet%20analyzer.%20Tokio%20async%2C%20crates.io)](https://github.com/BartoszOsiej/CyberForge)
+[![Typing SVG](https://readme-typing-svg.demolab.com/?font=JetBrains+Mono&weight=600&size=18&duration=3000&pause=1200&color=58A6FF&center=true&vCenter=true&width=600&height=45&lines=4%20Rust%20security%20tools%20%E2%80%94%20port%20scanner%2C%20web%20scanner%2C%20hash%20cracker%2C%20packet%20analyzer.%20Tokio%20async%2C%20crates.io)](https://github.com/BartoszOsiej/cybersec-tools)
 
 </div># 🔒 Cybersec Tools
 
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![Rust](https://img.shields.io/badge/Rust-2021-DEA584?style=flat-square&logo=rust)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/BartoszOsiej/CyberForge/badge)](https://scorecard.dev/viewer/?uri=github.com/BartoszOsiej/cybersec-tools)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](https://github.com/BartoszOsiej/cybersec-tools/blob/main/LICENSE)
 ![crates.io](https://img.shields.io/crates/v/netrecon?style=flat-square&label=netrecon&logo=rust)
 ![crates.io](https://img.shields.io/crates/v/shadowscan?style=flat-square&label=shadowscan&logo=rust)
 ![crates.io](https://img.shields.io/crates/v/hashsleuth?style=flat-square&label=hashsleuth&logo=rust)
@@ -18,7 +18,7 @@
 **A Rust workspace of four small, single-purpose security tools — network
 reconnaissance, web scanning, hash analysis, and packet inspection.**
 
-> 🇵🇱 [Wersja polska](README.pl.md) · [Documentation](https://bartoszosiej.github.io/Docs/projects/CyberForge/)
+> 🇵🇱 [Wersja polska](README.pl.md) · [Documentation](https://bartoszosiej.github.io/Docs/projects/cybersec-tools/)
 
 ---
 
@@ -50,7 +50,7 @@ reconnaissance, web scanning, hash analysis, and packet inspection.**
 ## Tools
 
 ```
-CyberForge/
+cybersec-tools/
 ├── netrecon/      TCP port scanner + banner grabbing + service fingerprinting
 ├── shadowscan/    Web vulnerability scanner: header audit, TLS, SQLi/XSS probes
 ├── hashsleuth/    Hash identifier, dictionary cracker, masked brute-forcer
@@ -66,7 +66,7 @@ CyberForge/
 cargo install netrecon shadowscan hashsleuth packeteye
 
 # Or build from source
-git clone https://github.com/BartoszOsiej/CyberForge.git
+git clone https://github.com/BartoszOsiej/cybersec-tools.git
 cd cybersec-tools
 cargo build --release
 
