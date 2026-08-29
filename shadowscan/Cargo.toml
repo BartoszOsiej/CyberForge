@@ -1,5 +1,5 @@
 [package]
-repository = "https://github.com/BartoszOsiej/cybersec-tools"
+repository = "https://github.com/BartoszOsiej/CyberForge"
 name = "shadowscan"
 version = "1.0.0"
 edition = "2021"
