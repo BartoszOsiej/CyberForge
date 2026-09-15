@@ -331,7 +331,12 @@ fn main() {
     // --top N replaces the default 1-1024 range (or an explicit port arg)
     if let Some(n) = top_n {
         if pos_args.len() < 2 {
-            pos_args.push(top_ports(n).into_iter().map(|p| p.to_string()).collect());
+            let ports = top_ports(n)
+                .into_iter()
+                .map(|p| p.to_string())
+                .collect::<Vec<_>>()
+                .join(",");
+            pos_args.push(ports);
         }
     }
 
