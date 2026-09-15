@@ -109,16 +109,24 @@ fn check_headers(agent: &Agent, base: &str, findings: &mut Vec<String>) {
         Ok(resp) => {
             let mut found = 0usize;
             for (hdr, msg) in SECURITY_HEADERS {
-                if resp.headers().iter().any(|(k, _)| k.as_str().eq_ignore_ascii_case(hdr)) {
+                if resp
+                    .headers()
+                    .iter()
+                    .any(|(k, _)| k.as_str().eq_ignore_ascii_case(hdr))
+                {
                     found += 1;
                 } else {
                     findings.push(format!("[header] {msg}"));
                 }
             }
-            let server = resp.headers().get("server")
+            let server = resp
+                .headers()
+                .get("server")
                 .and_then(|v| v.to_str().ok())
                 .unwrap_or("?");
-            let powered = resp.headers().get("x-powered-by")
+            let powered = resp
+                .headers()
+                .get("x-powered-by")
                 .and_then(|v| v.to_str().ok())
                 .unwrap_or("none");
             findings.push(format!(

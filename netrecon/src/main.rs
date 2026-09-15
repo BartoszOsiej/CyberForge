@@ -20,10 +20,9 @@ const BANNER_READ_MS: u64 = 1_500;
 /// Nmap-style frequency presets for `--top N`.
 /// Ordered by how commonly the port appears open on real hosts.
 const TOP_PORTS: &[u16] = &[
-    80, 443, 22, 445, 139, 3389, 8080, 21, 135, 23, 25, 53, 3306, 5432, 8081,
-    1433, 111, 4453, 5900, 6379, 9200, 27017, 11211, 161, 5984, 8443, 5985,
-    1723, 123, 514, 993, 995, 587, 143, 110, 389, 636, 465, 873, 2049, 1080,
-    1521, 3128, 5555, 5800, 8888, 3000, 5000, 1337, 8000,
+    80, 443, 22, 445, 139, 3389, 8080, 21, 135, 23, 25, 53, 3306, 5432, 8081, 1433, 111, 4453,
+    5900, 6379, 9200, 27017, 11211, 161, 5984, 8443, 5985, 1723, 123, 514, 993, 995, 587, 143, 110,
+    389, 636, 465, 873, 2049, 1080, 1521, 3128, 5555, 5800, 8888, 3000, 5000, 1337, 8000,
 ];
 
 /// Pick the first N entries of the top-ports preset (deduplicated).
@@ -41,7 +40,10 @@ fn top_ports(n: usize) -> Vec<u16> {
 /// SSH `banner-proto` prefix, FTP greeting).
 fn product_from_banner(banner: &str) -> Option<String> {
     let banner = banner.trim();
-    if let Some(rest) = banner.strip_prefix("HTTP/1.").or(banner.strip_prefix("HTTP/")) {
+    if let Some(rest) = banner
+        .strip_prefix("HTTP/1.")
+        .or(banner.strip_prefix("HTTP/"))
+    {
         let _ = rest;
         if let Some(idx) = banner.find("Server:") {
             let server = banner[idx + 7..]
@@ -491,8 +493,11 @@ mod tests {
         assert_eq!(top_ports(0).len(), 0);
         assert_eq!(top_ports(1).len(), 1);
         let all = top_ports(TOP_PORTS.len() + 10);
-        assert_eq!(all.len(), all.iter().collect::<std::collections::HashSet<_>>().len(),
-            "top ports must be deduplicated");
+        assert_eq!(
+            all.len(),
+            all.iter().collect::<std::collections::HashSet<_>>().len(),
+            "top ports must be deduplicated"
+        );
         let first5 = top_ports(5);
         assert_eq!(first5.len(), 5);
         // highest-frequency ports come first
