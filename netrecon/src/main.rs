@@ -12,10 +12,67 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-const VERSION: &str = "1.0.0";
+const VERSION: &str = "1.1.0";
 const DEFAULT_TIMEOUT_MS: u64 = 1_000;
 const DEFAULT_THREADS: usize = 128;
 const BANNER_READ_MS: u64 = 1_500;
+
+/// Nmap-style frequency presets for `--top N`.
+/// Ordered by how commonly the port appears open on real hosts.
+const TOP_PORTS: &[u16] = &[
+    80, 443, 22, 445, 139, 3389, 8080, 21, 135, 23, 25, 53, 3306, 5432, 8081,
+    1433, 111, 4453, 5900, 6379, 9200, 27017, 11211, 161, 5984, 8443, 5985,
+    1723, 123, 514, 993, 995, 587, 143, 110, 389, 636, 465, 873, 2049, 1080,
+    1521, 3128, 5555, 5800, 8888, 3000, 5000, 1337, 8000,
+];
+
+/// Pick the first N entries of the top-ports preset (deduplicated).
+fn top_ports(n: usize) -> Vec<u16> {
+    let mut seen = std::collections::HashSet::new();
+    TOP_PORTS
+        .iter()
+        .copied()
+        .filter(|p| seen.insert(*p))
+        .take(n)
+        .collect()
+}
+
+/// Extract a product string from a banner (e.g. HTTP `Server:` header,
+/// SSH `banner-proto` prefix, FTP greeting).
+fn product_from_banner(banner: &str) -> Option<String> {
+    let banner = banner.trim();
+    if let Some(rest) = banner.strip_prefix("HTTP/1.").or(banner.strip_prefix("HTTP/")) {
+        let _ = rest;
+        if let Some(idx) = banner.find("Server:") {
+            let server = banner[idx + 7..]
+                .lines()
+                .next()
+                .unwrap_or("")
+                .trim()
+                .to_string();
+            if !server.is_empty() {
+                return Some(server);
+            }
+        }
+        return None;
+    }
+    // SSH: "SSH-2.0-OpenSSH_9.2" — report up to the version separator
+    if let Some(rest) = banner.strip_prefix("SSH-") {
+        let product = rest.split([' ', '\r', '\n']).next().unwrap_or("");
+        if !product.is_empty() {
+            return Some(format!("SSH-{product}"));
+        }
+        return None;
+    }
+    // FTP: "220 host ESMTP Postfix" style — take the trailing product word
+    if banner.len() >= 3 && banner.as_bytes()[0..3].iter().all(|b| b.is_ascii_digit()) {
+        let words: Vec<&str> = banner.split_whitespace().collect();
+        if words.len() >= 3 {
+            return Some(words[2..].join(" "));
+        }
+    }
+    None
+}
 
 /// Port -> most common service name (IANA + well-known).
 fn service_name(port: u16) -> &'static str {
@@ -85,6 +142,7 @@ struct Found {
     port: u16,
     service: &'static str,
     banner: Option<String>,
+    product: Option<String>,
 }
 
 fn parse_cidr(s: &str) -> Result<Vec<IpAddr>, String> {
@@ -209,11 +267,13 @@ fn probe(addr: IpAddr, port: u16, timeout: Duration) -> Option<Found> {
         }
         _ => {}
     }
+    let product = banner.as_deref().and_then(product_from_banner);
     Some(Found {
         addr,
         port,
         service,
         banner,
+        product,
     })
 }
 
@@ -227,7 +287,7 @@ fn main() {
              \n\
              ARGUMENTS:\n  target   IP address, hostname, or CIDR (e.g. 10.0.0.0/24)\n  ports    comma list and/or ranges (default 1-1024)\n\
              \n\
-             OPTIONS:\n  --threads N   worker threads (default {DEFAULT_THREADS})\n  --timeout MS  connect timeout ms (default {DEFAULT_TIMEOUT_MS})\n  --json        JSON-lines output"
+             OPTIONS:\n  --threads N   worker threads (default {DEFAULT_THREADS})\n  --timeout MS  connect timeout ms (default {DEFAULT_TIMEOUT_MS})\n  --top N       scan the N most common ports (preset)\n  --json        JSON-lines output"
         );
         return;
     }
@@ -235,12 +295,20 @@ fn main() {
     let mut json_out = false;
     let mut threads = DEFAULT_THREADS;
     let mut timeout_ms = DEFAULT_TIMEOUT_MS;
+    let mut top_n: Option<usize> = None;
     let mut pos_args = Vec::new();
 
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
             "--json" => json_out = true,
+            "--top" => {
+                i += 1;
+                top_n = args
+                    .get(i)
+                    .and_then(|v| v.parse::<usize>().ok())
+                    .filter(|n| *n > 0);
+            }
             "--threads" => {
                 i += 1;
                 threads = args
@@ -258,6 +326,13 @@ fn main() {
             other => pos_args.push(other.to_string()),
         }
         i += 1;
+    }
+
+    // --top N replaces the default 1-1024 range (or an explicit port arg)
+    if let Some(n) = top_n {
+        if pos_args.len() < 2 {
+            pos_args.push(top_ports(n).into_iter().map(|p| p.to_string()).collect());
+        }
     }
 
     let targets = match expand_targets(&pos_args) {
@@ -316,10 +391,14 @@ fn main() {
     if json_out {
         for f in &found {
             println!(
-                "{{\"addr\":\"{}\",\"port\":{},\"service\":\"{}\",\"banner\":{}}}",
+                "{{\"addr\":\"{}\",\"port\":{},\"service\":\"{}\",\"product\":{},\"banner\":{}}}",
                 f.addr,
                 f.port,
                 f.service,
+                match &f.product {
+                    Some(p) => format!("\"{}\"", p.replace('"', "\\\"")),
+                    None => "null".to_string(),
+                },
                 match &f.banner {
                     Some(b) => format!("\"{}\"", b.replace('"', "\\\"")),
                     None => "null".to_string(),
@@ -333,7 +412,7 @@ fn main() {
                 f.addr,
                 f.port,
                 f.service,
-                f.banner.as_deref().unwrap_or("")
+                f.product.as_deref().unwrap_or("")
             );
         }
     }
@@ -400,6 +479,51 @@ mod tests {
         assert!(parse_cidr("10.0.0.0/33").is_err(), "prefix > 32 must fail");
         assert!(parse_cidr("10.0.0.0/abc").is_err());
         assert!(parse_cidr("10.0.0.0/24/24").is_err());
+    }
+
+    #[test]
+    fn top_ports_dedups_and_limits() {
+        assert_eq!(top_ports(0).len(), 0);
+        assert_eq!(top_ports(1).len(), 1);
+        let all = top_ports(TOP_PORTS.len() + 10);
+        assert_eq!(all.len(), all.iter().collect::<std::collections::HashSet<_>>().len(),
+            "top ports must be deduplicated");
+        let first5 = top_ports(5);
+        assert_eq!(first5.len(), 5);
+        // highest-frequency ports come first
+        assert_eq!(first5[0], 80);
+    }
+
+    #[test]
+    fn product_from_http_server_header() {
+        let banner = "HTTP/1.1 200 OK\r\nServer: nginx/1.24.0\r\nContent-Type: text/html";
+        assert_eq!(product_from_banner(banner).as_deref(), Some("nginx/1.24.0"));
+    }
+
+    #[test]
+    fn product_from_http_without_server_is_none() {
+        assert_eq!(product_from_banner("HTTP/1.1 404 Not Found\r\n\r\n"), None);
+    }
+
+    #[test]
+    fn product_from_ssh_banner() {
+        assert_eq!(
+            product_from_banner("SSH-2.0-OpenSSH_9.2p1 Debian").as_deref(),
+            Some("SSH-2.0-OpenSSH_9.2p1")
+        );
+    }
+
+    #[test]
+    fn product_from_ftp_greeting() {
+        assert_eq!(
+            product_from_banner("220 ftp.example.com ESMTP Postfix (Ubuntu)").as_deref(),
+            Some("ESMTP Postfix (Ubuntu)")
+        );
+    }
+
+    #[test]
+    fn product_from_plain_text_is_none() {
+        assert_eq!(product_from_banner("some random service"), None);
     }
 
     #[test]
