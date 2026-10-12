@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "CyberForge"
+abstract: "A Rust offensive-security toolkit: port scanner, web scanner, hash cracker and packet analyzer, shipped as separate crates (netrecon, shadowscan, hashsleuth, packeteye)."
+type: software
+authors:
+  - family-names: Osiej
+    given-names: Bartosz
+    affiliation: "Hartwell Labs"
+    website: "https://hartwell-labs.pl"
+repository-code: "https://github.com/BartoszOsiej/CyberForge"
+license: MIT
+keywords:
+  - security
+  - penetration-testing
+  - scanner
+  - rust
+  - cryptography
+version: "1.0"
+date-released: "2026-10-12"
